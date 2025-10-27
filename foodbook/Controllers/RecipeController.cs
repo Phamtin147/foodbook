@@ -829,16 +829,26 @@ namespace foodbook.Controllers
                     return Json(new { success = false, message = "Không tìm thấy thông tin người dùng" });
                 }
                 
-                _logger.LogInformation("ToggleSave - UserId: {UserId}, RecipeId: {RecipeId}, IsSaved: {IsSaved}", 
-                    currentUser.user_id.Value, recipeId, isSaved);
+                _logger.LogInformation("ToggleSave - UserId: {UserId}, RecipeId: {RecipeId}", 
+                    currentUser.user_id.Value, recipeId);
 
-                if (isSaved)
+                // Check if already saved in database (don't trust frontend)
+                var existingNotebook = await _supabaseService.Client
+                    .From<Notebook>()
+                    .Where(x => x.user_id == currentUser.user_id && x.recipe_id == recipeId)
+                    .Get();
+
+                bool isCurrentlySaved = existingNotebook.Models?.Count > 0;
+
+                if (isCurrentlySaved)
                 {
                     // Remove from notebook
                     await _supabaseService.Client
                         .From<Notebook>()
                         .Where(x => x.user_id == currentUser.user_id && x.recipe_id == recipeId)
                         .Delete();
+                    
+                    _logger.LogInformation("Removed recipe {RecipeId} from notebook for user {UserId}", recipeId, currentUser.user_id.Value);
                 }
                 else
                 {
@@ -850,11 +860,13 @@ namespace foodbook.Controllers
                         created_at = DateTime.UtcNow
                     };
                     await _supabaseService.Client.From<Notebook>().Insert(notebook);
+                    
+                    _logger.LogInformation("Added recipe {RecipeId} to notebook for user {UserId}", recipeId, currentUser.user_id.Value);
                 }
 
                 return Json(new { 
                     success = true, 
-                    isSaved = !isSaved 
+                    isSaved = !isCurrentlySaved 
                 });
             }
             catch (Exception ex)

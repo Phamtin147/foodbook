@@ -1,5 +1,10 @@
 # FoodBook - Ứng dụng Chia Sẻ Công Thức Nấu Ăn
 
+[![.NET CI/CD](https://github.com/Phamtin147/foodbook/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Phamtin147/foodbook/actions/workflows/dotnet.yml)
+[![.NET Version](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-36_passing-success)](TESTING.md)
+
 ## 📖 Giới thiệu / Introduction
 
 **FoodBook** là một ứng dụng web ASP.NET Core cho phép người dùng chia sẻ, khám phá và quản lý các công thức nấu ăn. Ứng dụng được xây dựng với kiến trúc MVC và sử dụng Supabase làm backend database và storage.
@@ -244,6 +249,35 @@ dotnet run
 - **Role-based authorization** (user/admin)
 - **CSRF protection** với AntiForgeryToken
 - **File upload validation**
+
+## 🧪 Testing
+
+### Test Coverage
+- **36 test cases** covering Controllers and Models
+- **xUnit** framework với **FluentAssertions**
+- **Automated testing** trên GitHub Actions
+
+### Running Tests
+
+```bash
+# Run all tests
+dotnet test foodbook/foodbook.Tests/foodbook.Tests.csproj
+
+# Run with detailed output
+dotnet test --verbosity detailed
+
+# Run with code coverage
+dotnet test --collect:"XPlat Code Coverage" --results-directory ./TestResults
+```
+
+### Test Reports
+
+GitHub Actions tự động tạo test reports cho mỗi commit và pull request:
+- ✅ Test summary trong PR checks
+- 📊 Code coverage reports
+- 📁 Downloadable artifacts (TRX files)
+
+Xem chi tiết tại [TESTING.md](TESTING.md)
 
 ## 🚀 Deployment
 

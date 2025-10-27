@@ -52,10 +52,10 @@
     
     <!-- Action Buttons -->
     <div class="d-flex gap-2">
-        <button class="btn btn-success btn-sm save-btn" id="btnSaveRecipe" 
+        <button class="btn @(Model.IsSaved ? "btn-warning" : "btn-success") btn-sm save-btn" id="btnSaveRecipe" 
                 data-recipe-id="@Model.Recipe.recipe_id" data-is-saved="@Model.IsSaved">
             <i class="bi @(Model.IsSaved ? "bi-bookmark-fill" : "bi-bookmark")"></i>
-            Lưu vào sổ tay
+            <span class="save-text">@(Model.IsSaved ? "Đã lưu" : "Lưu vào sổ tay")</span>
         </button>
         
         @if (!Model.IsOwnRecipe)

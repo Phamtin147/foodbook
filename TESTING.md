@@ -120,20 +120,91 @@ Tests tự động chạy khi:
 ### Workflow Steps
 
 1. **Checkout code** - Lấy code từ repository
-2. **Setup .NET 8.0** - Cài đặt .NET SDK
+2. **Setup .NET 8.0 & 9.0** - Cài đặt .NET SDK
 3. **Restore dependencies** - Khôi phục dependencies của project chính
-4. **Build project** - Build project chính
+4. **Build project** - Build project chính (Release mode)
 5. **Restore test dependencies** - Khôi phục dependencies của test project
-6. **Build tests** - Build test project
-7. **Run tests** - Chạy tất cả tests
-8. **Test Report** - Tạo report kết quả tests
+6. **Build tests** - Build test project (Release mode)
+7. **Run tests with coverage** - Chạy tests với code coverage collection
+8. **Publish Test Results** - Tạo test report với dorny/test-reporter
+9. **Upload Test Results** - Upload test results artifacts (TRX files)
+10. **Upload Code Coverage** - Upload coverage reports (Cobertura XML)
+
+### Permissions
+
+Workflow được cấp permissions sau:
+- `contents: read` - Đọc code từ repository
+- `checks: write` - Tạo check runs và annotations
+- `pull-requests: write` - Comment test results vào PR
+
+### Test Reports
+
+GitHub Actions tự động tạo các reports:
+
+1. **Test Summary** - Hiển thị trong PR checks
+   - ✅ Tổng số tests passed/failed
+   - ⏱️ Thời gian chạy
+   - 📊 Test coverage percentage
+
+2. **Detailed Report** - Xem trong Actions tab
+   - Chi tiết từng test case
+   - Stack traces cho failed tests
+   - Test execution timeline
+
+3. **Artifacts** - Download được:
+   - `test-results` - TRX files với chi tiết tests
+   - `code-coverage` - Coverage reports (XML format)
+   - Lưu giữ trong 30 ngày
 
 ### Xem kết quả tests trên GitHub
 
+#### Cách 1: Trong Pull Request
+
+1. Tạo Pull Request
+2. Scroll xuống phần **Checks**
+3. Xem **Test Results** check
+4. Click "Details" để xem chi tiết
+
+#### Cách 2: Trong Actions Tab
+
 1. Vào repository trên GitHub
-2. Click vào tab **Actions**
+2. Click tab **Actions**
 3. Chọn workflow run mới nhất
-4. Xem kết quả tests trong **Test Report**
+4. Xem các sections:
+   - **Summary** - Tổng quan
+   - **Test Results** - Chi tiết tests
+   - **Artifacts** - Download reports
+
+#### Cách 3: Download Artifacts
+
+1. Vào Actions → Chọn workflow run
+2. Scroll xuống phần **Artifacts**
+3. Download:
+   - `test-results.zip` - TRX files
+   - `code-coverage.zip` - Coverage XML files
+
+### Test Coverage Report
+
+Để xem coverage local:
+
+```bash
+# Chạy tests với coverage
+dotnet test foodbook/foodbook.Tests/foodbook.Tests.csproj \
+  --collect:"XPlat Code Coverage" \
+  --results-directory ./TestResults
+
+# Install report generator
+dotnet tool install -g dotnet-reportgenerator-globaltool
+
+# Generate HTML report
+reportgenerator \
+  -reports:"./TestResults/*/coverage.cobertura.xml" \
+  -targetdir:"./TestResults/CoverageReport" \
+  -reporttypes:Html
+
+# Open report
+start ./TestResults/CoverageReport/index.html
+```
 
 ## 🛠️ Viết Tests mới
 
