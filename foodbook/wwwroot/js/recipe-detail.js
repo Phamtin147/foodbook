@@ -209,18 +209,33 @@ function initializeSaveButton() {
                 const result = await response.json();
                 if (result.success) {
                     const icon = this.querySelector('i');
+                    const buttonText = this.querySelector('.save-text');
+                    
                     if (result.isSaved) {
                         icon.classList.remove('bi-bookmark');
                         icon.classList.add('bi-bookmark-fill');
+                        this.classList.remove('btn-success');
+                        this.classList.add('btn-warning');
+                        if (buttonText) buttonText.textContent = 'Đã lưu';
+                        showAlertModal('Đã lưu vào sổ tay', 'success');
                     } else {
                         icon.classList.remove('bi-bookmark-fill');
                         icon.classList.add('bi-bookmark');
+                        this.classList.remove('btn-warning');
+                        this.classList.add('btn-success');
+                        if (buttonText) buttonText.textContent = 'Lưu vào sổ tay';
+                        showAlertModal('Đã xóa khỏi sổ tay', 'success');
                     }
                     this.dataset.isSaved = result.isSaved;
+                } else {
+                    showAlertModal(result.message || 'Có lỗi xảy ra', 'error');
                 }
+            } else {
+                showAlertModal('Không thể kết nối đến máy chủ', 'error');
             }
         } catch (error) {
             console.error('Error toggling save:', error);
+            showAlertModal('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
         }
     });
 }

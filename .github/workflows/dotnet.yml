@@ -1,13 +1,18 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-name: .NET
+name: .NET CI/CD
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
 
 jobs:
   build-and-test:
@@ -20,7 +25,9 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: |
+          8.0.x
+          9.0.x
     
     - name: Restore dependencies
       run: dotnet restore foodbook/foodbook.csproj
@@ -34,5 +41,37 @@ jobs:
     - name: Build tests
       run: dotnet build foodbook/foodbook.Tests/foodbook.Tests.csproj --no-restore --configuration Release
     
-    - name: Run tests
-      run: dotnet test foodbook/foodbook.Tests/foodbook.Tests.csproj --no-build --verbosity normal --configuration Release
+    - name: Run tests with coverage
+      run: |
+        dotnet test foodbook/foodbook.Tests/foodbook.Tests.csproj \
+          --no-build \
+          --configuration Release \
+          --verbosity normal \
+          --logger "trx;LogFileName=test-results.trx" \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults
+    
+    - name: Publish Test Results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Test Results
+        path: ./TestResults/*.trx
+        reporter: dotnet-trx
+        fail-on-error: true
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: ./TestResults/
+        retention-days: 30
+    
+    - name: Upload Code Coverage
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: code-coverage
+        path: ./TestResults/*/coverage.cobertura.xml
+        retention-days: 30
