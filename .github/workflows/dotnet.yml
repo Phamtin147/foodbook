@@ -48,6 +48,8 @@ jobs:
           --configuration Release \
           --verbosity normal \
           --logger "trx;LogFileName=test-results.trx" \
+          --logger "liquid.md;LogFileName=test-report.md" \
+          --logger "xunit;LogFileName=test-results.xml" \
           --collect:"XPlat Code Coverage" \
           --results-directory ./TestResults
     
@@ -60,18 +62,51 @@ jobs:
         reporter: dotnet-trx
         fail-on-error: true
     
-    - name: Upload Test Results
+    - name: Generate Coverage Report
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.3.11
+      if: always()
+      with:
+        reports: './TestResults/*/coverage.cobertura.xml'
+        targetdir: './TestResults/CoverageReport'
+        reporttypes: 'Html;Badges;MarkdownSummaryGithub'
+        title: 'FoodBook Test Coverage Report'
+    
+    - name: Add Coverage PR Comment
+      uses: marocchino/sticky-pull-request-comment@v2
+      if: github.event_name == 'pull_request' && always()
+      with:
+        header: coverage
+        recreate: true
+        path: ./TestResults/CoverageReport/SummaryGithub.md
+    
+    - name: Upload Markdown Test Report
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-results
-        path: ./TestResults/
+        name: test-report-markdown
+        path: ./TestResults/test-report.md
         retention-days: 30
     
-    - name: Upload Code Coverage
+    - name: Upload Coverage Report HTML
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: code-coverage
-        path: ./TestResults/*/coverage.cobertura.xml
+        name: coverage-report-html
+        path: ./TestResults/CoverageReport/
+        retention-days: 30
+    
+    - name: Upload Test Results (TRX)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-trx
+        path: ./TestResults/*.trx
+        retention-days: 30
+    
+    - name: Upload Test Results (XML - Excel compatible)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-xml-excel
+        path: ./TestResults/*.xml
         retention-days: 30

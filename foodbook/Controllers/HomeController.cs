@@ -127,7 +127,7 @@ namespace foodbook.Controllers
 
                             if (typeDetail.Models.Any() && !string.IsNullOrEmpty(typeDetail.Models.First().content))
                             {
-                                tags.Add($"{typeDetail.Models.First().content.Trim()}");
+                                tags.Add($"#{typeDetail.Models.First().content.Trim()}");
                             }
                         }
                     }
@@ -710,16 +710,20 @@ namespace foodbook.Controllers
                     // Load ingredients
                     try
                     {
-                        var ingredients = await _supabaseService.Client
-                            .From<Ingredient>()
+                        var recipeIngredients = await _supabaseService.Client
+                            .From<RecipeIngredient>()
                             .Where(x => x.recipe_id == recipeId)
                             .Get();
-                        foreach (var ing in ingredients.Models ?? new List<Ingredient>())
+                        foreach (var ri in recipeIngredients.Models ?? new List<RecipeIngredient>())
                         {
-                            if (!string.IsNullOrEmpty(ing.name))
-                                tags.Add($"#{ing.name}");
+                            var ingredient = await _supabaseService.Client
+                                .From<IngredientMaster>()
+                                .Where(x => x.ingredient_id == ri.ingredient_id)
+                                .Single();
+                            if (!string.IsNullOrEmpty(ingredient.name))
+                                tags.Add($"{ingredient.name}");
                         }
-                        Console.WriteLine($"Loaded {ingredients.Models?.Count ?? 0} ingredients");
+                        Console.WriteLine($"Loaded {recipeIngredients.Models?.Count ?? 0} ingredients");
                     }
                     catch (Exception ex)
                     {

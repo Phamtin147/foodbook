@@ -1430,6 +1430,18 @@ function initializeUrlParameters() {
     const urlParams = new URLSearchParams(window.location.search);
     let shouldSearch = false;
     
+    // Check for ingredient parameter
+    const ingredient = urlParams.get('ingredient');
+    if (ingredient) {
+        const decodedIngredient = decodeURIComponent(ingredient);
+        // Add the ingredient to selectedIngredients
+        if (!selectedIngredients.includes(decodedIngredient)) {
+            selectedIngredients.push(decodedIngredient);
+            updateSelectedIngredients();
+            shouldSearch = true;
+        }
+    }
+    
     // Check for difficulty parameter
     const difficulty = urlParams.get('difficulty');
     if (difficulty) {
