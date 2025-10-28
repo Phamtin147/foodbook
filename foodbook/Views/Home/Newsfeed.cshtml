@@ -511,16 +511,19 @@ function searchByDifficulty(difficulty) {
     window.location.href = `/Search/Search?difficulty=${encodedDifficulty}`;
 }
 
-// Smart tag search - phân biệt độ khó và phân loại
+// Smart tag search - phân biệt độ khó, nguyên liệu và phân loại
 function searchByTagSmart(tag) {
     const difficulties = ['dễ', 'bình thường', 'khó', 'Dễ', 'Bình thường', 'Khó', 'DỄ', 'BÌNH THƯỜNG', 'KHÓ'];
     
-    // Kiểm tra xem tag có phải là độ khó không
     if (difficulties.includes(tag)) {
+        // Độ khó
         searchByDifficulty(tag);
+    } else if (tag.startsWith('#')) {
+        // Recipe type (có #)
+        searchByTag(tag.substring(1));
     } else {
-        // Nếu không phải độ khó thì là nguyên liệu hoặc phân loại
-        searchByTag(tag);
+        // Nguyên liệu (không có #)
+        window.location.href = `/Search/Search?ingredient=${encodeURIComponent(tag)}`;
     }
 }
 </script>

@@ -19,11 +19,13 @@ namespace foodbook.Controllers
         }
 
         // Search page - GET
-        public async Task<IActionResult> Search()
+        public async Task<IActionResult> Search(string ingredient = null, string type = null, string difficulty = null)
         {
             try
             {
                 _logger.LogInformation("=== SEARCH PAGE LOAD START ===");
+                _logger.LogInformation("Query params - ingredient: {Ingredient}, type: {Type}, difficulty: {Difficulty}", 
+                    ingredient, type, difficulty);
 
                 // 1. Load ingredients from Ingredient_Master
                 var ingredientsResult = await _supabaseService.Client
@@ -98,7 +100,59 @@ namespace foodbook.Controllers
 
                 _logger.LogInformation("Loaded {Count} recipes for display", searchResults.Count);
 
-                // 4. Create view model
+                // 4. Apply query parameter filters if provided
+                if (!string.IsNullOrEmpty(ingredient))
+                {
+                    // Filter by ingredient
+                    var ingredientIdResult = await _supabaseService.Client
+                        .From<IngredientMaster>()
+                        .Where(x => x.name == ingredient)
+                        .Get();
+                    
+                    if (ingredientIdResult.Models.Any())
+                    {
+                        var ingredientId = ingredientIdResult.Models.First().ingredient_id;
+                        var recipeIdsWithIngredient = await _supabaseService.Client
+                            .From<RecipeIngredient>()
+                            .Where(x => x.ingredient_id == ingredientId)
+                            .Get();
+                        
+                        var recipeIds = recipeIdsWithIngredient.Models.Select(x => x.recipe_id).ToList();
+                        searchResults = searchResults.Where(x => recipeIds.Contains(x.RecipeId)).ToList();
+                        _logger.LogInformation("After ingredient filter '{Ingredient}': {Count} recipes", ingredient, searchResults.Count);
+                    }
+                }
+                
+                if (!string.IsNullOrEmpty(type))
+                {
+                    // Filter by recipe type
+                    var typeIdResult = await _supabaseService.Client
+                        .From<RecipeType>()
+                        .Where(x => x.content == type)
+                        .Get();
+                    
+                    if (typeIdResult.Models.Any())
+                    {
+                        var typeId = typeIdResult.Models.First().recipe_type_id;
+                        var recipeIdsWithType = await _supabaseService.Client
+                            .From<RecipeRecipeType>()
+                            .Where(x => x.recipe_type_id == typeId)
+                            .Get();
+                        
+                        var recipeIds = recipeIdsWithType.Models.Select(x => x.recipe_id).ToList();
+                        searchResults = searchResults.Where(x => recipeIds.Contains(x.RecipeId)).ToList();
+                        _logger.LogInformation("After type filter '{Type}': {Count} recipes", type, searchResults.Count);
+                    }
+                }
+                
+                if (!string.IsNullOrEmpty(difficulty))
+                {
+                    // Filter by difficulty
+                    searchResults = searchResults.Where(x => x.Level.Equals(difficulty, StringComparison.OrdinalIgnoreCase)).ToList();
+                    _logger.LogInformation("After difficulty filter '{Difficulty}': {Count} recipes", difficulty, searchResults.Count);
+                }
+
+                // 5. Create view model
                 var viewModel = new SearchViewModel
                 {
                     SearchResults = searchResults,
