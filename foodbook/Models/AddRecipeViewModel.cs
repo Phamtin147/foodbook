@@ -14,6 +14,9 @@ namespace foodbook.Models
         [Display(Name = "Ảnh thumbnail")]
         public IFormFile? ThumbnailImage { get; set; }
 
+        // For Edit: existing thumbnail URL
+        public string? ThumbnailUrl { get; set; }
+
         [Display(Name = "Mô tả nguyên liệu")]
         public string? Description { get; set; }
 
@@ -48,6 +51,9 @@ namespace foodbook.Models
         
         // Giữ lại để backward compatible với view cũ
         public IFormFile? StepImage { get; set; }
+
+        // For Edit: existing media URLs for this step
+        public List<string>? ExistingMediaUrls { get; set; } = new List<string>();
     }
 }
 
