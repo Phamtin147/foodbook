@@ -135,6 +135,13 @@ html {
   color: #1dd75b !important;
 }
 
+/* Footer mobile layout: center, two rows */
+@media (max-width: 768px) {
+  .footer-section .row { text-align: center; }
+  .footer-section .nav { justify-content: center !important; gap: 1rem; }
+  .footer-section .social-icons { justify-content: center !important; margin-top: 0.75rem; }
+}
+
 .social-link {
   color: #6c757d;
   text-decoration: none;
@@ -625,14 +632,8 @@ body {
 
 /* Mobile: default icons-only, can expand with .show */
 @media (max-width: 768px) {
-  .sidebar { width: 56px; min-width: 56px; padding: 8px; }
-  .sidebar .sidebar-section-title, .sidebar .sidebar-menu-link span { display: none; }
-  .sidebar .sidebar-menu-link { justify-content: center; padding: 12px 0; }
-  .sidebar .sidebar-menu-icon { margin-right: 0; display: flex; }
-  .sidebar.show { width: 85vw; }
-  .sidebar.show .sidebar-section-title, .sidebar.show .sidebar-menu-link span { display: inline; }
-  .sidebar.show .sidebar-menu-link { justify-content: flex-start; padding: 12px 14px; }
-  .sidebar.show .sidebar-menu-icon { margin-right: 12px; }
+  /* Hide sidebar entirely on mobile; navigation moves to navbar dropdown */
+  .sidebar { display: none !important; }
   .main-content { margin-left: 0; }
   .sidebar-toggle { display: none !important; }
 }
