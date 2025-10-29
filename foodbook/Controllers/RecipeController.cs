@@ -710,7 +710,7 @@ namespace foodbook.Controllers
             }
 
             // Check level
-            var validLevels = new[] { "dễ", "trung bình", "khó" };
+            var validLevels = new[] { "dễ", "bình thường", "khó" };
             if (!validLevels.Contains(model.Level?.ToLower()))
             {
                 validationErrors.Add("Độ khó không hợp lệ");
