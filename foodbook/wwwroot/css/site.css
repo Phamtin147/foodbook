@@ -381,7 +381,10 @@ body {
 .feed-title { font-size: 1.35rem; }
 
 .tag-container { 
-    position: relative; 
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 .tag-list { 
     display: flex; 
@@ -423,7 +426,6 @@ body {
     cursor: pointer; 
     flex-shrink: 0;
     transition: all 0.2s ease;
-    margin-top: 8px;
 }
 .tag-show-more-btn:hover { 
     background: #d1d5db; 

@@ -540,25 +540,77 @@ namespace foodbook.Controllers
 
                 // 5. Lấy Media cho từng bước
                 var stepMedia = new Dictionary<int, List<Media>>();
+                _logger.LogInformation("Loading media for recipe {RecipeId}", id);
+                
+                // Load TẤT CẢ RecipeStep_Media links của recipe này 1 lần
+                var allMediaLinksResult = await _supabaseService.Client
+                    .From<RecipeStepMedia>()
+                    .Where(x => x.recipe_id == id)
+                    .Order("display_order", Supabase.Postgrest.Constants.Ordering.Ascending)
+                    .Get();
+                
+                var allMediaLinks = allMediaLinksResult.Models ?? new List<RecipeStepMedia>();
+                _logger.LogInformation("Total media links found for recipe: {Count}", allMediaLinks.Count);
+                
                 foreach (var step in steps.Models ?? new List<RecipeStep>())
                 {
-                    var mediaLinks = await _supabaseService.Client
-                        .From<RecipeStepMedia>()
-                        .Where(x => x.recipe_id == id && x.step == step.step)
-                        .Order("display_order", Supabase.Postgrest.Constants.Ordering.Ascending)
-                        .Get();
-
-                    var mediaList = new List<Media>();
-                    foreach (var link in mediaLinks.Models ?? new List<RecipeStepMedia>())
+                    _logger.LogInformation("Loading media for step {StepNumber}", step.step);
+                    
+                    try
                     {
-                        var media = await _supabaseService.Client
-                            .From<Media>()
-                            .Where(x => x.media_id == link.media_id)
-                            .Single();
-                        if (media != null)
-                            mediaList.Add(media);
+                        // Filter media links cho step này bằng LINQ
+                        var stepMediaLinks = allMediaLinks
+                            .Where(x => x.step == step.step)
+                            .OrderBy(x => x.display_order)
+                            .ToList();
+
+                        _logger.LogInformation("Found {Count} media links for step {StepNumber}", 
+                            stepMediaLinks.Count, step.step);
+
+                        var mediaList = new List<Media>();
+                        
+                        if (stepMediaLinks.Any())
+                        {
+                            foreach (var link in stepMediaLinks)
+                            {
+                                _logger.LogInformation("Loading media_id {MediaId} for step {Step}", 
+                                    link.media_id, step.step);
+                                
+                                try
+                                {
+                                    var media = await _supabaseService.Client
+                                        .From<Media>()
+                                        .Where(x => x.media_id == link.media_id)
+                                        .Single();
+                                    
+                                    if (media != null)
+                                    {
+                                        mediaList.Add(media);
+                                        _logger.LogInformation("Added media {MediaId}: img={HasImg}, video={HasVideo}", 
+                                            link.media_id,
+                                            !string.IsNullOrEmpty(media.media_img), 
+                                            !string.IsNullOrEmpty(media.media_video));
+                                    }
+                                    else
+                                    {
+                                        _logger.LogWarning("Media {MediaId} not found in database", link.media_id);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "Error loading media {MediaId}", link.media_id);
+                                }
+                            }
+                        }
+                        
+                        stepMedia[step.step] = mediaList;
+                        _logger.LogInformation("Step {StepNumber} has {Count} media items loaded", step.step, mediaList.Count);
                     }
-                    stepMedia[step.step] = mediaList;
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error loading media for step {StepNumber}", step.step);
+                        stepMedia[step.step] = new List<Media>();
+                    }
                 }
 
                 // 6. Đếm số likes

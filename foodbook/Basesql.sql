@@ -168,3 +168,21 @@ CREATE TABLE public.like_dislike (
   CONSTRAINT fk_ld_user FOREIGN KEY (user_id) REFERENCES public.User(user_id),
   CONSTRAINT fk_ld_recipe FOREIGN KEY (recipe_id) REFERENCES public.Recipe(recipe_id)
 );
+
+-- Trigger function to activate user when verified
+CREATE OR REPLACE FUNCTION activate_user_on_verification()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- When is_verified changes to true, set status to active
+  IF NEW.is_verified = true AND (OLD.is_verified IS NULL OR OLD.is_verified = false) THEN
+    NEW.status = 'active';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger on User-Trigger table
+CREATE TRIGGER trigger_activate_user_on_verification
+BEFORE UPDATE ON public."User-Trigger"
+FOR EACH ROW
+EXECUTE FUNCTION activate_user_on_verification();
