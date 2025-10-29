@@ -549,7 +549,7 @@ namespace foodbook.Controllers
                 {
                     Name = recipe.name,
                     Description = recipe.description,
-                    CookTime = recipe.cook_time ?? 0,
+                    CookTime = recipe.cook_time ?? 30, // Default to 30 if null, must be >= 1 for validation
                     Level = recipe.level ?? "dễ",
                     ThumbnailUrl = recipe.thumbnail_img
                 };
@@ -649,6 +649,57 @@ namespace foodbook.Controllers
         public async Task<IActionResult> Edit(int id, AddRecipeViewModel model)
         {
             _logger.LogInformation("=== EDIT RECIPE STARTED === ID: {RecipeId}", id);
+            
+            // Debug: Log all form values
+            _logger.LogInformation("=== FORM VALUES DEBUG ===");
+            foreach (var key in Request.Form.Keys)
+            {
+                var value = Request.Form[key].ToString();
+                _logger.LogInformation("Form[{Key}] = {Value}", key, value);
+            }
+            
+            _logger.LogInformation("=== MODEL VALUES (Before Fix) ===");
+            _logger.LogInformation("Model.CookTime = {CookTime}", model.CookTime);
+            _logger.LogInformation("Model.Level = {Level}", model.Level ?? "NULL");
+            
+            // Fix: Read CookTime and Level directly from form if model binding failed
+            if (Request.Form.ContainsKey("CookTime"))
+            {
+                var cookTimeStr = Request.Form["CookTime"].ToString();
+                _logger.LogInformation("Found CookTime in form: {CookTimeStr}", cookTimeStr);
+                if (int.TryParse(cookTimeStr, out var cookTime))
+                {
+                    model.CookTime = cookTime;
+                    _logger.LogInformation("Fixed CookTime from Request.Form: {CookTime}", cookTime);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to parse CookTime: {CookTimeStr}", cookTimeStr);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("CookTime NOT found in Request.Form");
+            }
+            
+            if (Request.Form.ContainsKey("Level"))
+            {
+                var levelStr = Request.Form["Level"].ToString();
+                _logger.LogInformation("Found Level in form: {LevelStr}", levelStr);
+                if (!string.IsNullOrEmpty(levelStr))
+                {
+                    model.Level = levelStr;
+                    _logger.LogInformation("Fixed Level from Request.Form: {Level}", levelStr);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Level NOT found in Request.Form");
+            }
+            
+            _logger.LogInformation("=== MODEL VALUES (After Fix) ===");
+            _logger.LogInformation("Model.CookTime = {CookTime}", model.CookTime);
+            _logger.LogInformation("Model.Level = {Level}", model.Level ?? "NULL");
 
             // ============ VALIDATION PHASE ============
             
@@ -710,7 +761,7 @@ namespace foodbook.Controllers
             }
 
             // Check level
-            var validLevels = new[] { "dễ", "trung bình", "khó" };
+            var validLevels = new[] { "dễ", "bình thường", "khó" };
             if (!validLevels.Contains(model.Level?.ToLower()))
             {
                 validationErrors.Add("Độ khó không hợp lệ");
@@ -892,6 +943,9 @@ namespace foodbook.Controllers
                 
                 // ============ ATOMIC UPDATE (All prep successful - now update DB) ============
 
+                _logger.LogInformation("Before update - Current recipe: CookTime={CurrentCookTime}, Level={CurrentLevel}", recipe.cook_time, recipe.level);
+                _logger.LogInformation("Updating with - Model CookTime={CookTime}, Model Level={Level}", model.CookTime, model.Level);
+
                 recipe.name = model.Name;
                 recipe.description = model.Description;
                 recipe.cook_time = model.CookTime;
@@ -899,10 +953,21 @@ namespace foodbook.Controllers
                 recipe.step_number = Math.Max(1, model.Steps?.Count ?? 0);
                 recipe.thumbnail_img = uploadedThumbnail;
 
+                _logger.LogInformation("After assignment - Recipe: CookTime={CookTime}, Level={Level}", recipe.cook_time, recipe.level);
+
+                // Use explicit Set() to ensure all fields are updated
                 await _supabaseService.Client
                     .From<Recipe>()
                     .Where(x => x.recipe_id == id)
-                    .Update(recipe);
+                    .Set(x => x.name, model.Name)
+                    .Set(x => x.description, model.Description)
+                    .Set(x => x.cook_time, model.CookTime)
+                    .Set(x => x.level, model.Level)
+                    .Set(x => x.step_number, Math.Max(1, model.Steps?.Count ?? 0))
+                    .Set(x => x.thumbnail_img, uploadedThumbnail)
+                    .Update();
+                
+                _logger.LogInformation("Recipe updated successfully - CookTime={CookTime}, Level={Level}", model.CookTime, model.Level);
 
                 // 2. Delete old data
                 // Delete old ingredients
