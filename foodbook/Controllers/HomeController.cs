@@ -50,17 +50,18 @@ namespace foodbook.Controllers
                     }
                 }
                 
-                // Lấy recipes với pagination
+                // Lấy recipes với pagination (chỉ lấy recipes có status = 'active')
                 var offset = (page - 1) * pageSize;
                 var recipesResult = await _supabaseService.Client
                     .From<Recipe>()
                     .Select("*")
+                    .Where(x => x.status == "active")
                     .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
                     .Range(offset, offset + pageSize - 1)
                     .Get();
                 
                 var recipes = recipesResult.Models;
-                _logger.LogInformation("Loaded {Count} recipes from DB", recipes.Count);
+                _logger.LogInformation("Loaded {Count} active recipes from DB", recipes.Count);
                 
                 // Map sang NewfeedViewModel
                 var newsfeedItems = new List<NewfeedViewModel>();
@@ -914,11 +915,12 @@ namespace foodbook.Controllers
                     }
                 }
                 
-                // Lấy recipes với pagination
+                // Lấy recipes với pagination (chỉ lấy recipes có status = 'active')
                 var offset = (page - 1) * pageSize;
                 var recipesResult = await _supabaseService.Client
                     .From<Recipe>()
                     .Select("*")
+                    .Where(x => x.status == "active")
                     .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
                     .Range(offset, offset + pageSize - 1)
                     .Get();
