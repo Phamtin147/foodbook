@@ -33,7 +33,7 @@
                                 <button class="btn @(recipe.IsFollowing ? "btn-outline-secondary" : "btn-success") rounded-pill px-3 mt-2 follow-btn follow-btn-sm" 
                                         data-user-id="@recipe.UserId" 
                                         data-is-following="@recipe.IsFollowing.ToString().ToLower()">
-                                    @(recipe.IsFollowing ? "Đã theo dõi" : "Theo dõi")
+                                    <i class="bi bi-person-plus"></i> @(recipe.IsFollowing ? "Following" : "Follow")
                                 </button>
                             }
                         </div>
@@ -133,9 +133,9 @@ function showTagsPopup(recipeId, tagsString) {
     // Parse tags từ string
     const tags = tagsString.split('|');
     
-    // Tạo HTML cho tags với khả năng click
+    // Tạo HTML cho tags với khả năng click - dùng searchByTagSmart để phân biệt ingredient vs recipe type
     const tagsHtml = tags.map(tag => 
-        `<span class="tag-chip tag-clickable" onclick="searchByTag('${tag}')">${tag}</span>`
+        `<span class="tag-chip tag-clickable" onclick="searchByTagSmart('${tag}')">${tag}</span>`
     ).join('');
     
     // Load tags vào popup
@@ -211,8 +211,13 @@ document.addEventListener('click', function(event) {
     }
 });
 
+// Đóng dropdown khi scroll
+window.addEventListener('scroll', function() {
+    hideTagsPopup();
+}, { passive: true });
+
 function createRecipeCard(recipe) {
-    const tagsHtml = recipe.tags.slice(0, 3).map(tag => `<span class="tag-chip tag-clickable" onclick="event.stopPropagation(); event.preventDefault(); searchByTag('${tag}')">${tag}</span>`).join('');
+    const tagsHtml = recipe.tags.slice(0, 3).map(tag => `<span class="tag-chip tag-clickable" onclick="event.stopPropagation(); event.preventDefault(); searchByTagSmart('${tag}')">${tag}</span>`).join('');
     const showMoreBtn = recipe.tags.length > 3 ?
         `<button class="tag-show-more-btn" onclick="event.stopPropagation(); event.preventDefault(); showTagsPopup(${recipe.recipeId}, '${recipe.tags.join('|')}')">+${recipe.tags.length - 3}</button>` : '';
 
@@ -220,7 +225,7 @@ function createRecipeCard(recipe) {
         `<button class="btn ${recipe.isFollowing ? 'btn-outline-secondary' : 'btn-success'} rounded-pill px-3 mt-2 follow-btn follow-btn-sm"
                  data-user-id="${recipe.userId}"
                  data-is-following="${recipe.isFollowing}">
-            ${recipe.isFollowing ? 'Đã theo dõi' : 'Theo dõi'}
+            <i class="bi bi-person-plus"></i> ${recipe.isFollowing ? 'Following' : 'Follow'}
          </button>` : '';
 
     return `
@@ -228,13 +233,19 @@ function createRecipeCard(recipe) {
             <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden feed-card">
                 <div class="feed-card-header text-center p-3 pb-0">
                     <div class="user-inline-center">
-                        <a href="/Profile/Info/${recipe.userId}" class="d-flex align-items-center text-decoration-none">
-                            <img src="${recipe.userAvatarUrl}" alt="User Avatar" class="rounded-circle user-avatar user-avatar-ring" width="40" height="40" style="object-fit: cover;">
+                        <a href="/Profile/Info/${recipe.userId}" class="text-decoration-none text-dark">
+                            <img src="${recipe.userAvatarUrl || 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'}"
+                                 onerror="this.onerror=null;this.src='https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png';"
+                                 alt="avatar"
+                                 class="rounded-circle user-avatar user-avatar-ring"
+                                 width="40" height="40"
+                                 style="object-fit: cover;">
                             <div class="fw-semibold user-name">${recipe.userName}</div>
                         </a>
                     </div>
                     ${followButtonHtml}
                 </div>
+                
                 <!-- Bọc ảnh + nội dung bằng link -->
                 <a href="/Recipe/Detail/${recipe.recipeId}" class="text-decoration-none text-dark feed-link">
                     <!-- Ảnh món ăn -->
@@ -248,7 +259,7 @@ function createRecipeCard(recipe) {
                         <h5 class="card-title fw-bold mb-2 feed-title">${recipe.recipeName}</h5>
                         <div class="tag-container mb-3" data-recipe-id="${recipe.recipeId}">
                             <div class="tag-list tag-collapsed">
-                                ${recipe.tags.slice(0, 3).map(tag => `<span class="tag-chip">${tag}</span>`).join('')}
+                                ${tagsHtml}
                             </div>
                             ${showMoreBtn}
                         </div>
@@ -356,62 +367,6 @@ function loadMoreRecipes() {
         });
 }
 
-function createRecipeCard(recipe) {
-    const tagsHtml = recipe.tags.slice(0, 3).map(tag => `<span class="tag-chip tag-clickable" onclick="event.stopPropagation(); event.preventDefault(); searchByTag('${tag}')">${tag}</span>`).join('');
-    const showMoreBtn = recipe.tags.length > 3 ? 
-        `<button class="tag-show-more-btn" onclick="event.stopPropagation(); event.preventDefault(); showTagsPopup(${recipe.recipeId}, '${recipe.tags.join('|')}')">+${recipe.tags.length - 3}</button>` : '';
-    
-    const followButtonHtml = (recipe.userId !== 0 && !recipe.isOwnPost) ? 
-        `<button class="btn ${recipe.isFollowing ? 'btn-outline-secondary' : 'btn-success'} rounded-pill px-3 mt-2 follow-btn follow-btn-sm" 
-                 data-user-id="${recipe.userId}" 
-                 data-is-following="${recipe.isFollowing}">
-            ${recipe.isFollowing ? 'Đã theo dõi' : 'Theo dõi'}
-         </button>` : '';
-    
-    return `
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden feed-card">
-                <div class="feed-card-header text-center p-3 pb-0">
-                    <div class="user-inline-center">
-                        <a href="/Profile/Info/${recipe.userId}" class="text-decoration-none text-dark">
-                            <img src="${recipe.userAvatarUrl || 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'}"
-                                 alt="avatar"
-                                 class="rounded-circle user-avatar user-avatar-ring"
-                                 width="40" height="40"
-                                 style="object-fit: cover;">
-                            <div class="fw-semibold user-name">${recipe.userName}</div>
-                        </a>
-                    </div>
-                    ${followButtonHtml}
-                </div>
-                
-                <a href="/Recipe/Detail/${recipe.recipeId}" class="text-decoration-none text-dark feed-link">
-                    <div class="thumb mt-2">
-                        <img src="${recipe.thumbnailImg || 'https://via.placeholder.com/600x400?text=No+Image'}" 
-                             alt="${recipe.recipeName}">
-                    </div>
-                    
-                    <div class="card-body feed-card-body">
-                        <h5 class="card-title fw-bold mb-2 feed-title">${recipe.recipeName}</h5>
-                        <div class="tag-container mb-3" data-recipe-id="${recipe.recipeId}">
-                            <div class="tag-list tag-collapsed">
-                                ${tagsHtml}
-                            </div>
-                            ${showMoreBtn}
-                        </div>
-                    </div>
-                </a>
-                
-                <div class="d-flex justify-content-between align-items-center border-top text-muted small feed-actions">
-                    <div class="action"><i class="bi bi-hand-thumbs-up me-1"></i>${recipe.LikesCount || recipe.likesCount || 0}</div>
-                    <div class="action"><i class="bi bi-chat me-1"></i>${recipe.CommentsCount || recipe.commentsCount || 0}</div>
-                    <div class="action"><i class="bi bi-share me-1"></i>${recipe.SharesCount || recipe.sharesCount || 0}</div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
 // Follow button functionality
 document.addEventListener('click', function(event) {
     if (event.target.classList.contains('follow-btn')) {
@@ -431,12 +386,12 @@ document.addEventListener('click', function(event) {
         if (newFollowStatus) {
             button.classList.remove('btn-success');
             button.classList.add('btn-outline-secondary');
-            button.textContent = 'Đã theo dõi';
+            button.innerHTML = '<i class="bi bi-person-plus"></i> Following';
             button.setAttribute('data-is-following', 'true');
         } else {
             button.classList.remove('btn-outline-secondary');
             button.classList.add('btn-success');
-            button.textContent = 'Theo dõi';
+            button.innerHTML = '<i class="bi bi-person-plus"></i> Follow';
             button.setAttribute('data-is-following', 'false');
         }
         
@@ -458,12 +413,12 @@ document.addEventListener('click', function(event) {
                 if (isFollowing) {
                     button.classList.remove('btn-success');
                     button.classList.add('btn-outline-secondary');
-                    button.textContent = 'Đã theo dõi';
+                    button.innerHTML = '<i class="bi bi-person-plus"></i> Following';
                     button.setAttribute('data-is-following', 'true');
                 } else {
                     button.classList.remove('btn-outline-secondary');
                     button.classList.add('btn-success');
-                    button.textContent = 'Theo dõi';
+                    button.innerHTML = '<i class="bi bi-person-plus"></i> Follow';
                     button.setAttribute('data-is-following', 'false');
                 }
                 alert('Có lỗi xảy ra: ' + (data.message || 'Không thể thực hiện thao tác'));
@@ -475,12 +430,12 @@ document.addEventListener('click', function(event) {
             if (isFollowing) {
                 button.classList.remove('btn-success');
                 button.classList.add('btn-outline-secondary');
-                button.textContent = 'Đã theo dõi';
+                button.innerHTML = '<i class="bi bi-person-plus"></i> Following';
                 button.setAttribute('data-is-following', 'true');
             } else {
                 button.classList.remove('btn-outline-secondary');
                 button.classList.add('btn-success');
-                button.textContent = 'Theo dõi';
+                button.innerHTML = '<i class="bi bi-person-plus"></i> Follow';
                 button.setAttribute('data-is-following', 'false');
             }
             alert('Có lỗi xảy ra khi thực hiện thao tác');

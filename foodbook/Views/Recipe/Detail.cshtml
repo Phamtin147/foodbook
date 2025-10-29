@@ -96,14 +96,11 @@
     </div>
 }
 
-<!-- Ingredients Section -->
+<!-- Description Section -->
 <div class="recipe-section mb-4">
-    <h5 class="section-title mb-3">Nguyên liệu</h5>
+    <h5 class="section-title mb-3">Mô tả công thức</h5>
     <div class="ingredients-box">
-        @foreach (var ingredient in Model.Ingredients)
-        {
-            <div class="ingredient-item">@ingredient.name</div>
-        }
+        <p class="mb-0" style="white-space: pre-line;">@Model.Recipe.description</p>
     </div>
 </div>
 
