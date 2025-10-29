@@ -59,10 +59,11 @@ namespace foodbook.Controllers
                 _logger.LogInformation("Loaded {Count} recipe types: {Types}", 
                     recipeTypes.Count, string.Join(", ", recipeTypes.Take(5)));
 
-                // 3. Load all recipes for display
+                // 3. Load all active recipes for display (chỉ lấy recipes có status = 'active')
                 var recipesResult = await _supabaseService.Client
                     .From<Recipe>()
                     .Select("*")
+                    .Where(x => x.status == "active")
                     .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
                     .Get();
 
@@ -186,10 +187,11 @@ namespace foodbook.Controllers
                 _logger.LogInformation("Selected difficulties: {Difficulties}", 
                     request.SelectedDifficulties != null ? string.Join(", ", request.SelectedDifficulties) : "None");
 
-                // 1. Start with all recipes
+                // 1. Start with all active recipes (chỉ lấy recipes có status = 'active')
                 var allRecipesResult = await _supabaseService.Client
                     .From<Recipe>()
                     .Select("*")
+                    .Where(x => x.status == "active")
                     .Get();
 
                 var filteredRecipes = allRecipesResult.Models.ToList();
@@ -421,6 +423,7 @@ namespace foodbook.Controllers
                 var users = await _supabaseService.Client
                     .From<User>()
                     .Select("*")
+                    .Where(x => x.status == "active")
                     .Get();
 
                 var filteredUsers = users.Models.AsEnumerable();

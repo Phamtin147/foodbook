@@ -41,10 +41,11 @@ namespace foodbook.Controllers
 
                 if (recipeIds.Any())
                 {
-                    // Get full recipe details
+                    // Get full recipe details (chỉ lấy recipes có status = 'active')
                     var recipes = await _supabaseService.Client
                         .From<Recipe>()
                         .Select("*")
+                        .Where(x => x.status == "active")
                         .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
                         .Get();
                     

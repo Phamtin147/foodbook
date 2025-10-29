@@ -55,18 +55,20 @@ namespace foodbook.Controllers
                 if (userResp == null)
                     return View("~/Views/Account/PersonalInfo.cshtml", new ProfileViewModel());
 
-                // Lấy tất cả recipes của user để đếm
+                // Lấy tất cả active recipes của user để đếm (chỉ lấy recipes có status = 'active')
                 var allRecipesResp = await _supabaseService.Client
                     .From<Recipe>()
                     .Filter("user_id", Operator.Equals, userResp.user_id)
+                    .Filter("status", Operator.Equals, "active")
                     .Get();
 
                 var allRecipeModels = allRecipesResp.Models ?? new List<Recipe>();
                 
-                // Lấy 8 bài đầu tiên để hiển thị
+                // Lấy 8 bài đầu tiên để hiển thị (chỉ lấy recipes có status = 'active')
                 var recipesResp = await _supabaseService.Client
                     .From<Recipe>()
                     .Filter("user_id", Operator.Equals, userResp.user_id)
+                    .Filter("status", Operator.Equals, "active")
                     .Order("created_at", Ordering.Descending)
                     .Range(0, 7) // Lấy 8 bài đầu tiên (0-7)
                     .Get();
@@ -821,6 +823,7 @@ namespace foodbook.Controllers
                 var recipesResp = await _supabaseService.Client
                     .From<Recipe>()
                     .Filter("user_id", Operator.Equals, userId)
+                    .Filter("status", Operator.Equals, "active")
                     .Order("created_at", Ordering.Descending)
                     .Range(offset, offset + pageSize - 1)
                     .Get();
@@ -898,9 +901,10 @@ namespace foodbook.Controllers
                     .From<Share>()
                     .Get();
 
-                // Lấy tất cả recipes
+                // Lấy tất cả active recipes
                 var allRecipes = await _supabaseService.Client
                     .From<Recipe>()
+                    .Where(x => x.status == "active")
                     .Get();
 
                 // Tạo dictionary counts cho từng recipe
@@ -1098,6 +1102,7 @@ namespace foodbook.Controllers
 
                 var allRecipes = await _supabaseService.Client
                     .From<Recipe>()
+                    .Where(x => x.status == "active")
                     .Limit(5)
                     .Get();
 
@@ -1595,10 +1600,10 @@ namespace foodbook.Controllers
                 var offset = (page - 1) * pageSize;
                 Console.WriteLine($"Offset: {offset}");
 
-                // Lấy recipes với pagination từ Recipe table
+                // Lấy recipes với pagination từ Recipe table (chỉ lấy recipes có status = 'active')
                 var recipesResp = await _supabaseService.Client
                     .From<Recipe>()
-                    .Where(x => x.user_id == userId)
+                    .Where(x => x.user_id == userId && x.status == "active")
                     .Order("created_at", Ordering.Descending)
                     .Range(offset, offset + pageSize - 1)
                     .Get();
@@ -1670,10 +1675,10 @@ namespace foodbook.Controllers
         {
             try
             {
-                // Lấy tất cả recipes của user
+                // Lấy tất cả active recipes của user
                 var allRecipes = await _supabaseService.Client
                     .From<Recipe>()
-                    .Where(x => x.user_id == userId)
+                    .Where(x => x.user_id == userId && x.status == "active")
                     .Order("created_at", Ordering.Descending)
                     .Get();
 
@@ -1682,21 +1687,21 @@ namespace foodbook.Controllers
                 // Test pagination
                 var page1 = await _supabaseService.Client
                     .From<Recipe>()
-                    .Where(x => x.user_id == userId)
+                    .Where(x => x.user_id == userId && x.status == "active")
                     .Order("created_at", Ordering.Descending)
                     .Range(0, 7) // page 1: 8 items
                     .Get();
 
                 var page2 = await _supabaseService.Client
                     .From<Recipe>()
-                    .Where(x => x.user_id == userId)
+                    .Where(x => x.user_id == userId && x.status == "active")
                     .Order("created_at", Ordering.Descending)
                     .Range(8, 15) // page 2: 8 items
                     .Get();
 
                 var page3 = await _supabaseService.Client
                     .From<Recipe>()
-                    .Where(x => x.user_id == userId)
+                    .Where(x => x.user_id == userId && x.status == "active")
                     .Order("created_at", Ordering.Descending)
                     .Range(16, 23) // page 3: 8 items
                     .Get();
@@ -1741,10 +1746,10 @@ namespace foodbook.Controllers
         {
             try
             {
-                // Lấy tất cả recipes của user để so sánh
+                // Lấy tất cả active recipes của user để so sánh
                 var allRecipes = await _supabaseService.Client
                     .From<Recipe>()
-                    .Where(x => x.user_id == userId)
+                    .Where(x => x.user_id == userId && x.status == "active")
                     .Order("created_at", Ordering.Descending)
                     .Get();
 
