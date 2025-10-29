@@ -231,6 +231,9 @@
                         <input type="number" 
                                class="form-control time-input" 
                                asp-for="CookTime" 
+                               name="CookTime"
+                               id="CookTime"
+                               value="@Model.CookTime"
                                min="1"
                                max="1440"
                                required>
@@ -639,7 +642,113 @@
         function prepareFormSubmit(event) {
             const form = document.getElementById('addRecipeForm');
             
-            form.querySelectorAll('.dynamic-hidden-input').forEach(el => el.remove());
+            // Debug: Log values before submit
+            // Find CookTime input by id or name (we set id="CookTime" explicitly)
+            let cookTimeInput = document.getElementById('CookTime');
+            if (!cookTimeInput) {
+                cookTimeInput = form.querySelector('input[name="CookTime"]');
+            }
+            if (!cookTimeInput) {
+                cookTimeInput = form.querySelector('input[type="number"].time-input');
+            }
+            
+            const levelInput = document.getElementById('levelInput');
+            
+            console.log('=== BEFORE SUBMIT ===');
+            console.log('CookTime input found:', cookTimeInput);
+            console.log('CookTime input id:', cookTimeInput ? cookTimeInput.id : 'NOT FOUND');
+            console.log('CookTime input name:', cookTimeInput ? cookTimeInput.name : 'NOT FOUND');
+            console.log('CookTime input type:', cookTimeInput ? cookTimeInput.type : 'NOT FOUND');
+            console.log('CookTime input value:', cookTimeInput ? cookTimeInput.value : 'NOT FOUND');
+            console.log('Level input:', levelInput);
+            console.log('Level value:', levelInput ? levelInput.value : 'NOT FOUND');
+            
+            // Get values BEFORE any manipulation - CRITICAL: Use the actual input value
+            let cookTimeValue = '';
+            if (cookTimeInput) {
+                cookTimeValue = cookTimeInput.value.trim();
+                console.log('Raw CookTime value from input:', cookTimeValue, '(type:', typeof cookTimeValue, ')');
+            } else {
+                console.error('CookTime input NOT FOUND!');
+            }
+            
+            // Validate CookTime is not empty (but don't override user input if valid)
+            if (!cookTimeValue || cookTimeValue === '' || isNaN(parseInt(cookTimeValue)) || parseInt(cookTimeValue) < 1) {
+                console.warn('CookTime is invalid or empty:', cookTimeValue);
+                if (!cookTimeValue || cookTimeValue === '') {
+                    cookTimeValue = '30'; // Only use default if truly empty
+                    console.warn('Setting CookTime to default 30');
+                    if (cookTimeInput) {
+                        cookTimeInput.value = cookTimeValue;
+                    }
+                }
+            }
+            
+            console.log('Final CookTime value to submit:', cookTimeValue);
+            
+            // Remove old dynamic inputs ONLY (not CookTime or Level)
+            form.querySelectorAll('.dynamic-hidden-input').forEach(el => {
+                // Don't remove if it's CookTime or Level
+                if (el.name !== 'CookTime' && el.name !== 'Level') {
+                    el.remove();
+                }
+            });
+            
+            // CRITICAL: Ensure CookTime input exists with correct name and value
+            // asp-for should create name="CookTime", but verify it exists
+            let cookTimeInputToSubmit = form.querySelector('input[name="CookTime"]');
+            
+            if (!cookTimeInputToSubmit) {
+                // Create new input if not found
+                cookTimeInputToSubmit = document.createElement('input');
+                cookTimeInputToSubmit.type = 'hidden';
+                cookTimeInputToSubmit.name = 'CookTime';
+                form.appendChild(cookTimeInputToSubmit);
+                console.log('Created new CookTime input');
+            }
+            
+            // ALWAYS set the value to what user entered
+            cookTimeInputToSubmit.value = cookTimeValue;
+            console.log('Set CookTime input value:', cookTimeInputToSubmit.name, '=', cookTimeInputToSubmit.value);
+            
+            // Also ensure visible input has the value
+            if (cookTimeInput && cookTimeInput !== cookTimeInputToSubmit) {
+                // If visible input is different from the one being submitted
+                if (cookTimeInput.name !== 'CookTime') {
+                    // Visible input doesn't have name="CookTime", make sure submit input has correct value
+                    cookTimeInputToSubmit.value = cookTimeInput.value || cookTimeValue;
+                    console.log('Using value from visible input:', cookTimeInput.value);
+                } else {
+                    // Visible input has correct name, sync values
+                    cookTimeInput.value = cookTimeValue;
+                    cookTimeInputToSubmit.value = cookTimeValue;
+                }
+            }
+            
+            // Final verification
+            const finalCookTimeCheck = form.querySelector('input[name="CookTime"]');
+            console.log('=== FINAL VERIFICATION ===');
+            console.log('CookTime input exists:', !!finalCookTimeCheck);
+            console.log('CookTime input value:', finalCookTimeCheck ? finalCookTimeCheck.value : 'MISSING');
+            
+            // Ensure Level is in form
+            let levelValue = levelInput ? levelInput.value : '';
+            const existingLevelInput = form.querySelector('input[name="Level"]');
+            if (!existingLevelInput) {
+                const hiddenLevel = document.createElement('input');
+                hiddenLevel.type = 'hidden';
+                hiddenLevel.name = 'Level';
+                hiddenLevel.value = levelValue;
+                form.appendChild(hiddenLevel);
+                console.log('Added hidden Level:', levelValue);
+            } else if (levelInput && existingLevelInput.value !== levelInput.value) {
+                existingLevelInput.value = levelInput.value;
+                console.log('Updated Level value:', levelInput.value);
+            }
+            
+            console.log('=== AFTER PREPARE ===');
+            console.log('CookTime in form:', form.querySelector('input[name="CookTime"]')?.value);
+            console.log('Level in form:', form.querySelector('input[name="Level"]')?.value);
             
             ingredientList.forEach((ingredient, index) => {
                 const input = document.createElement('input');
