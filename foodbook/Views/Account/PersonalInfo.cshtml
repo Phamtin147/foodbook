@@ -294,10 +294,15 @@
 
         // Create recipe card HTML
         function createRecipeCard(recipe) {
-            const deleteBtn = isOwnProfile ? 
-                `<button class="btn btn-outline-danger btn-sm" onclick="deleteRecipe(${recipe.recipeId})">
-                    <i class="bi bi-trash"></i>
-                </button>` : '';
+            const actionBtns = isOwnProfile ? 
+                `<div class="d-flex gap-1">
+                    <a href="/Recipe/Edit/${recipe.recipeId}" class="btn btn-outline-primary btn-sm" title="Chỉnh sửa">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteRecipe(${recipe.recipeId})" title="Xóa">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>` : '';
             
             return `
                 <div class="col-lg-3 col-md-4 col-sm-6" data-recipe-id="${recipe.recipeId}">
@@ -321,7 +326,7 @@
                                     <span><i class="bi bi-hand-thumbs-up text-success"></i> ${recipe.likes || 0}</span>
                                     <span><i class="bi bi-clock"></i> ${recipe.cookTime || 0} phút</span>
                                 </div>
-                                ${deleteBtn}
+                                ${actionBtns}
                             </div>
                         </div>
                     </div>

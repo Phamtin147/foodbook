@@ -52,6 +52,12 @@
     
     <!-- Action Buttons -->
     <div class="d-flex gap-2">
+        @if (Model.IsOwnRecipe)
+        {
+            <a href="@Url.Action("Edit", "Recipe", new { id = Model.Recipe.recipe_id })" class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil-square"></i> Chỉnh sửa
+            </a>
+        }
         <button class="btn @(Model.IsSaved ? "btn-warning" : "btn-success") btn-sm save-btn" id="btnSaveRecipe" 
                 data-recipe-id="@Model.Recipe.recipe_id" data-is-saved="@Model.IsSaved">
             <i class="bi @(Model.IsSaved ? "bi-bookmark-fill" : "bi-bookmark")"></i>

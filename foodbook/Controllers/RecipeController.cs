@@ -488,6 +488,623 @@ namespace foodbook.Controllers
             }
         }
 
+        // Edit Recipe - GET
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            try
+            {
+                var currentUserId = HttpContext.Session.GetInt32("UserId");
+                if (!currentUserId.HasValue)
+                {
+                    TempData["Error"] = "Bạn cần đăng nhập để chỉnh sửa công thức";
+                    return RedirectToAction("Login", "Account");
+                }
+
+                // Load recipe
+                var recipe = await _supabaseService.Client
+                    .From<Recipe>()
+                    .Where(x => x.recipe_id == id)
+                    .Single();
+
+                if (recipe == null)
+                {
+                    TempData["Error"] = "Không tìm thấy công thức";
+                    return RedirectToAction("Newsfeed", "Home");
+                }
+
+                // Check if current user is owner
+                if (recipe.user_id != currentUserId.Value)
+                {
+                    TempData["Error"] = "Bạn không có quyền chỉnh sửa công thức này";
+                    return RedirectToAction("Detail", new { id = id });
+                }
+
+                // Load ingredients suggestions
+                var ingredientNames = _supabaseService.Client
+                    .From<IngredientMaster>()
+                    .Select("name")
+                    .Get().Result.Models
+                    .Where(i => !string.IsNullOrWhiteSpace(i.name))
+                    .Select(i => i.name!.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(n => n)
+                    .ToList();
+
+                var typeContents = _supabaseService.Client
+                    .From<RecipeType>()
+                    .Select("content")
+                    .Get().Result.Models
+                    .Where(t => !string.IsNullOrWhiteSpace(t.content))
+                    .Select(t => t.content!.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(n => n)
+                    .ToList();
+
+                ViewBag.IngredientSuggestions = ingredientNames;
+                ViewBag.TypeSuggestions = typeContents;
+
+                // Load current recipe data
+                var model = new AddRecipeViewModel
+                {
+                    Name = recipe.name,
+                    Description = recipe.description,
+                    CookTime = recipe.cook_time ?? 0,
+                    Level = recipe.level ?? "dễ",
+                    ThumbnailUrl = recipe.thumbnail_img
+                };
+
+                // Load ingredients
+                var recipeIngredients = await _supabaseService.Client
+                    .From<RecipeIngredient>()
+                    .Where(x => x.recipe_id == id)
+                    .Get();
+
+                model.Ingredients = new List<string>();
+                foreach (var ri in recipeIngredients.Models ?? new List<RecipeIngredient>())
+                {
+                    var ingredient = await _supabaseService.Client
+                        .From<IngredientMaster>()
+                        .Where(x => x.ingredient_id == ri.ingredient_id)
+                        .Single();
+                    if (ingredient != null && !string.IsNullOrEmpty(ingredient.name))
+                        model.Ingredients.Add(ingredient.name);
+                }
+
+                // Load recipe types
+                var recipeTypes = await _supabaseService.Client
+                    .From<RecipeRecipeType>()
+                    .Where(x => x.recipe_id == id)
+                    .Get();
+
+                model.RecipeTypes = new List<string>();
+                foreach (var rt in recipeTypes.Models ?? new List<RecipeRecipeType>())
+                {
+                    var type = await _supabaseService.Client
+                        .From<RecipeType>()
+                        .Where(x => x.recipe_type_id == rt.recipe_type_id)
+                        .Single();
+                    if (type != null && !string.IsNullOrEmpty(type.content))
+                        model.RecipeTypes.Add(type.content);
+                }
+
+                // Load steps
+                var steps = await _supabaseService.Client
+                    .From<RecipeStep>()
+                    .Where(x => x.recipe_id == id)
+                    .Order("step", Supabase.Postgrest.Constants.Ordering.Ascending)
+                    .Get();
+
+                model.Steps = new List<RecipeStepViewModel>();
+                foreach (var step in steps.Models ?? new List<RecipeStep>())
+                {
+                    var stepModel = new RecipeStepViewModel
+                    {
+                        StepNumber = step.step,
+                        Instruction = step.instruction
+                    };
+
+                    // Load media for this step
+                    var mediaLinks = await _supabaseService.Client
+                        .From<RecipeStepMedia>()
+                        .Where(x => x.recipe_id == id && x.step == step.step)
+                        .Order("display_order", Supabase.Postgrest.Constants.Ordering.Ascending)
+                        .Get();
+
+                    stepModel.ExistingMediaUrls = new List<string>();
+                    foreach (var link in mediaLinks.Models ?? new List<RecipeStepMedia>())
+                    {
+                        var media = await _supabaseService.Client
+                            .From<Media>()
+                            .Where(x => x.media_id == link.media_id)
+                            .Single();
+                        
+                        if (media != null)
+                        {
+                            if (!string.IsNullOrEmpty(media.media_img))
+                                stepModel.ExistingMediaUrls.Add(media.media_img);
+                            else if (!string.IsNullOrEmpty(media.media_video))
+                                stepModel.ExistingMediaUrls.Add(media.media_video);
+                        }
+                    }
+
+                    model.Steps.Add(stepModel);
+                }
+
+                ViewBag.RecipeId = id;
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading recipe for edit");
+                TempData["Error"] = "Có lỗi xảy ra khi tải công thức";
+                return RedirectToAction("Newsfeed", "Home");
+            }
+        }
+
+        // Edit Recipe - POST
+        [HttpPost]
+        [DisableRequestSizeLimit]
+        [RequestFormLimits(MultipartBodyLengthLimit = 5368709120)]
+        public async Task<IActionResult> Edit(int id, AddRecipeViewModel model)
+        {
+            _logger.LogInformation("=== EDIT RECIPE STARTED === ID: {RecipeId}", id);
+
+            // ============ VALIDATION PHASE ============
+            
+            // 1. Model State Validation
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                _logger.LogError("ModelState invalid: {Errors}", string.Join(", ", errors));
+                TempData["Error"] = "Vui lòng điền đầy đủ thông tin! " + string.Join(", ", errors);
+                ViewBag.RecipeId = id;
+                return View(model);
+            }
+
+            // 2. Authentication Check
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (!currentUserId.HasValue)
+            {
+                TempData["Error"] = "Vui lòng đăng nhập lại! (Session timeout)";
+                return RedirectToAction("Login", "Account");
+            }
+
+            // 3. Business Logic Validation
+            var validationErrors = new List<string>();
+
+            // Check ingredients
+            if (model.Ingredients == null || !model.Ingredients.Any())
+            {
+                validationErrors.Add("Phải có ít nhất 1 nguyên liệu");
+            }
+
+            // Check recipe types
+            if (model.RecipeTypes == null || !model.RecipeTypes.Any())
+            {
+                validationErrors.Add("Phải chọn ít nhất 1 phân loại");
+            }
+
+            // Check steps
+            if (model.Steps == null || !model.Steps.Any())
+            {
+                validationErrors.Add("Phải có ít nhất 1 bước thực hiện");
+            }
+            else
+            {
+                // Validate each step
+                for (int i = 0; i < model.Steps.Count; i++)
+                {
+                    var step = model.Steps[i];
+                    if (string.IsNullOrWhiteSpace(step.Instruction))
+                    {
+                        validationErrors.Add($"Bước {i + 1}: Vui lòng nhập mô tả");
+                    }
+                }
+            }
+
+            // Check cook time
+            if (model.CookTime < 1 || model.CookTime > 1440)
+            {
+                validationErrors.Add("Thời gian nấu phải từ 1-1440 phút");
+            }
+
+            // Check level
+            var validLevels = new[] { "dễ", "trung bình", "khó" };
+            if (!validLevels.Contains(model.Level?.ToLower()))
+            {
+                validationErrors.Add("Độ khó không hợp lệ");
+            }
+
+            // 4. File Validation (if new thumbnail uploaded)
+            if (model.ThumbnailImage != null)
+            {
+                const long maxFileSize = 10 * 1024 * 1024; // 10MB
+                if (model.ThumbnailImage.Length > maxFileSize)
+                {
+                    validationErrors.Add("Ảnh thumbnail không được vượt quá 10MB");
+                }
+
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                var fileExtension = Path.GetExtension(model.ThumbnailImage.FileName).ToLower();
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    validationErrors.Add("Ảnh thumbnail chỉ chấp nhận định dạng: jpg, jpeg, png, gif, webp");
+                }
+            }
+
+            // 5. Validate step media files
+            if (model.Steps != null)
+            {
+                foreach (var step in model.Steps)
+                {
+                    if (step.StepMedia != null)
+                    {
+                        foreach (var file in step.StepMedia)
+                        {
+                            const long maxMediaSize = 50 * 1024 * 1024; // 50MB
+                            if (file.Length > maxMediaSize)
+                            {
+                                validationErrors.Add($"File {file.FileName} vượt quá 50MB");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If validation failed, return with errors
+            if (validationErrors.Any())
+            {
+                _logger.LogWarning("Validation failed: {Errors}", string.Join(", ", validationErrors));
+                TempData["Error"] = string.Join("<br/>", validationErrors);
+                ViewBag.RecipeId = id;
+                
+                // Reload suggestions for re-render
+                var ingredientNames = _supabaseService.Client.From<IngredientMaster>().Select("name").Get().Result.Models.Where(i => !string.IsNullOrWhiteSpace(i.name)).Select(i => i.name!.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(n => n).ToList();
+                var typeContents = _supabaseService.Client.From<RecipeType>().Select("content").Get().Result.Models.Where(t => !string.IsNullOrWhiteSpace(t.content)).Select(t => t.content!.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(n => n).ToList();
+                ViewBag.IngredientSuggestions = ingredientNames;
+                ViewBag.TypeSuggestions = typeContents;
+                
+                return View(model);
+            }
+
+            try
+            {
+                // 6. Recipe Existence & Ownership Check
+                var recipe = await _supabaseService.Client
+                    .From<Recipe>()
+                    .Where(x => x.recipe_id == id)
+                    .Single();
+
+                if (recipe == null)
+                {
+                    TempData["Error"] = "Không tìm thấy công thức";
+                    return RedirectToAction("Newsfeed", "Home");
+                }
+
+                if (recipe.user_id != currentUserId.Value)
+                {
+                    TempData["Error"] = "Bạn không có quyền chỉnh sửa công thức này";
+                    return RedirectToAction("Detail", new { id = id });
+                }
+
+                // ============ UPDATE PHASE (All validations passed) ============
+                
+                _logger.LogInformation("Starting update phase for recipe {RecipeId}", id);
+
+                // ============ PRE-UPDATE PREPARATION (Validate all data before modifying DB) ============
+                
+                var preparedIngredients = new List<(string name, int id)>();
+                var preparedRecipeTypes = new List<(string name, int id)>();
+                var uploadedThumbnail = recipe.thumbnail_img; // Keep old by default
+                
+                try
+                {
+                    // 1. Prepare & validate thumbnail upload (if new)
+                    if (model.ThumbnailImage != null)
+                    {
+                        _logger.LogInformation("Uploading new thumbnail...");
+                        uploadedThumbnail = await _storageService.UploadFileAsync(
+                            model.ThumbnailImage,
+                            isVideo: false,
+                            folderPath: $"recipes/{id}"
+                        );
+                        _logger.LogInformation("Thumbnail uploaded successfully: {Url}", uploadedThumbnail);
+                    }
+                    
+                    // 2. Prepare ingredients (validate all can be found/created)
+                    _logger.LogInformation("Preparing ingredients...");
+                    foreach (var ingredientName in model.Ingredients ?? new List<string>())
+                    {
+                        if (string.IsNullOrWhiteSpace(ingredientName)) continue;
+                        
+                        var trimmedName = ingredientName.Trim();
+                        var ingredientMaster = await _supabaseService.Client
+                            .From<IngredientMaster>()
+                            .Where(x => x.name == trimmedName)
+                            .Single();
+                        
+                        int ingredientId;
+                        if (ingredientMaster == null)
+                        {
+                            // Create new ingredient
+                            var newIngredient = new IngredientMaster { name = trimmedName };
+                            var result = await _supabaseService.Client
+                                .From<IngredientMaster>()
+                                .Insert(newIngredient);
+                            ingredientId = result.Models.First().ingredient_id ?? 0;
+                            _logger.LogInformation("Created new ingredient: {Name} (ID: {Id})", trimmedName, ingredientId);
+                        }
+                        else
+                        {
+                            ingredientId = ingredientMaster.ingredient_id ?? 0;
+                        }
+                        
+                        preparedIngredients.Add((trimmedName, ingredientId));
+                    }
+                    
+                    // 3. Prepare recipe types (validate all can be found/created)
+                    _logger.LogInformation("Preparing recipe types...");
+                    foreach (var typeName in model.RecipeTypes ?? new List<string>())
+                    {
+                        if (string.IsNullOrWhiteSpace(typeName)) continue;
+                        
+                        var trimmedType = typeName.Trim();
+                        var recipeType = await _supabaseService.Client
+                            .From<RecipeType>()
+                            .Where(x => x.content == trimmedType)
+                            .Single();
+                        
+                        int typeId;
+                        if (recipeType == null)
+                        {
+                            // Create new type
+                            var newType = new RecipeType { content = trimmedType };
+                            var result = await _supabaseService.Client
+                                .From<RecipeType>()
+                                .Insert(newType);
+                            typeId = result.Models.First().recipe_type_id ?? 0;
+                            _logger.LogInformation("Created new recipe type: {Name} (ID: {Id})", trimmedType, typeId);
+                        }
+                        else
+                        {
+                            typeId = recipeType.recipe_type_id ?? 0;
+                        }
+                        
+                        preparedRecipeTypes.Add((trimmedType, typeId));
+                    }
+                    
+                    // 4. Validate steps data
+                    if (model.Steps == null || !model.Steps.Any())
+                    {
+                        throw new InvalidOperationException("Không có bước nào để cập nhật");
+                    }
+                    
+                    _logger.LogInformation("All preparation successful. Starting DB update...");
+                }
+                catch (Exception prepEx)
+                {
+                    _logger.LogError(prepEx, "Preparation phase failed - aborting update");
+                    TempData["Error"] = $"Lỗi khi chuẩn bị dữ liệu: {prepEx.Message}";
+                    ViewBag.RecipeId = id;
+                    return View(model);
+                }
+                
+                // ============ ATOMIC UPDATE (All prep successful - now update DB) ============
+
+                recipe.name = model.Name;
+                recipe.description = model.Description;
+                recipe.cook_time = model.CookTime;
+                recipe.level = model.Level;
+                recipe.step_number = Math.Max(1, model.Steps?.Count ?? 0);
+                recipe.thumbnail_img = uploadedThumbnail;
+
+                await _supabaseService.Client
+                    .From<Recipe>()
+                    .Where(x => x.recipe_id == id)
+                    .Update(recipe);
+
+                // 2. Delete old data
+                // Delete old ingredients
+                var oldIngredients = await _supabaseService.Client
+                    .From<RecipeIngredient>()
+                    .Where(x => x.recipe_id == id)
+                    .Get();
+                
+                foreach (var item in oldIngredients.Models ?? new List<RecipeIngredient>())
+                {
+                    await _supabaseService.Client
+                        .From<RecipeIngredient>()
+                        .Where(x => x.recipe_id == id && x.ingredient_id == item.ingredient_id)
+                        .Delete();
+                }
+
+                // Delete old recipe types
+                var oldTypes = await _supabaseService.Client
+                    .From<RecipeRecipeType>()
+                    .Where(x => x.recipe_id == id)
+                    .Get();
+
+                foreach (var item in oldTypes.Models ?? new List<RecipeRecipeType>())
+                {
+                    await _supabaseService.Client
+                        .From<RecipeRecipeType>()
+                        .Where(x => x.recipe_id == id && x.recipe_type_id == item.recipe_type_id)
+                        .Delete();
+                }
+
+                // Delete old steps and media
+                var oldSteps = await _supabaseService.Client
+                    .From<RecipeStep>()
+                    .Where(x => x.recipe_id == id)
+                    .Get();
+
+                foreach (var step in oldSteps.Models ?? new List<RecipeStep>())
+                {
+                    // Delete all media links for this step (no need to loop - 2 conditions only)
+                    await _supabaseService.Client
+                        .From<RecipeStepMedia>()
+                        .Where(x => x.recipe_id == id && x.step == step.step)
+                        .Delete();
+
+                    // Delete step
+                    await _supabaseService.Client
+                        .From<RecipeStep>()
+                        .Where(x => x.recipe_id == id && x.step == step.step)
+                        .Delete();
+                }
+
+                // 3. Insert new ingredients (using prepared data)
+                _logger.LogInformation("Inserting {Count} ingredients...", preparedIngredients.Count);
+                foreach (var (name, ingredientId) in preparedIngredients)
+                {
+                    var recipeIngredient = new RecipeIngredient
+                    {
+                        recipe_id = id,
+                        ingredient_id = ingredientId
+                    };
+                    await _supabaseService.Client
+                        .From<RecipeIngredient>()
+                        .Insert(recipeIngredient);
+                }
+
+                // 4. Insert new recipe types (using prepared data)
+                _logger.LogInformation("Inserting {Count} recipe types...", preparedRecipeTypes.Count);
+                foreach (var (name, typeId) in preparedRecipeTypes)
+                {
+                    var recipeRecipeType = new RecipeRecipeType
+                    {
+                        recipe_id = id,
+                        recipe_type_id = typeId
+                    };
+                    await _supabaseService.Client
+                        .From<RecipeRecipeType>()
+                        .Insert(recipeRecipeType);
+                }
+
+                // 5. Insert new steps and media
+                if (model.Steps != null && model.Steps.Any())
+                {
+                    foreach (var step in model.Steps)
+                    {
+                        var stepNumber = step.StepNumber;
+
+                        var recipeStep = new RecipeStep
+                        {
+                            recipe_id = id,
+                            step = stepNumber,
+                            instruction = step.Instruction ?? ""
+                        };
+
+                        await _supabaseService.Client
+                            .From<RecipeStep>()
+                            .Insert(recipeStep);
+
+                        int displayOrder = 1;
+
+                        // 1. Re-insert existing media (preserve old media)
+                        if (step.ExistingMediaUrls != null && step.ExistingMediaUrls.Any())
+                        {
+                            foreach (var existingMediaUrl in step.ExistingMediaUrls)
+                            {
+                                if (string.IsNullOrEmpty(existingMediaUrl)) continue;
+
+                                // Find media_id from URL (try both img and video)
+                                var existingMedia = await _supabaseService.Client
+                                    .From<Media>()
+                                    .Where(x => x.media_img == existingMediaUrl)
+                                    .Single();
+                                
+                                if (existingMedia == null)
+                                {
+                                    existingMedia = await _supabaseService.Client
+                                        .From<Media>()
+                                        .Where(x => x.media_video == existingMediaUrl)
+                                        .Single();
+                                }
+
+                                if (existingMedia?.media_id != null)
+                                {
+                                    var recipeStepMedia = new RecipeStepMedia
+                                    {
+                                        recipe_id = id,
+                                        step = stepNumber,
+                                        media_id = existingMedia.media_id.Value,
+                                        display_order = displayOrder++
+                                    };
+
+                                    await _supabaseService.Client
+                                        .From<RecipeStepMedia>()
+                                        .Insert(recipeStepMedia);
+                                }
+                            }
+                        }
+
+                        // 2. Upload and insert new media
+                        var mediaFiles = new List<IFormFile>();
+                        if (step.StepMedia != null && step.StepMedia.Any())
+                        {
+                            mediaFiles.AddRange(step.StepMedia);
+                        }
+                        else if (step.StepImage != null)
+                        {
+                            mediaFiles.Add(step.StepImage);
+                        }
+
+                        if (mediaFiles.Any())
+                        {
+                            foreach (var mediaFile in mediaFiles)
+                            {
+                                var isVideo = _storageService.IsVideoFile(mediaFile);
+                                
+                                var mediaUrl = await _storageService.UploadFileAsync(
+                                    mediaFile,
+                                    isVideo: isVideo,
+                                    folderPath: $"recipes/{id}/steps/{stepNumber}"
+                                );
+
+                                var media = new Media
+                                {
+                                    media_img = isVideo ? null : mediaUrl,
+                                    media_video = isVideo ? mediaUrl : null
+                                };
+
+                                var mediaResult = await _supabaseService.Client
+                                    .From<Media>()
+                                    .Insert(media);
+
+                                var createdMedia = mediaResult.Models.FirstOrDefault();
+                                if (createdMedia?.media_id != null)
+                                {
+                                    var recipeStepMedia = new RecipeStepMedia
+                                    {
+                                        recipe_id = id,
+                                        step = stepNumber,
+                                        media_id = createdMedia.media_id.Value,
+                                        display_order = displayOrder++
+                                    };
+
+                                    await _supabaseService.Client
+                                        .From<RecipeStepMedia>()
+                                        .Insert(recipeStepMedia);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                TempData["Success"] = "Cập nhật công thức thành công!";
+                return RedirectToAction("Detail", new { id = id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating recipe");
+                TempData["Error"] = $"Có lỗi xảy ra: {ex.Message}";
+                ViewBag.RecipeId = id;
+                return View(model);
+            }
+        }
+
         // Recipe Detail
         [HttpGet]
         public async Task<IActionResult> Detail(int id)

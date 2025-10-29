@@ -1,6 +1,6 @@
 @model AddRecipeViewModel
 @{
-    ViewData["Title"] = "Thêm công thức mới";
+    ViewData["Title"] = "Chỉnh sửa công thức";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -8,7 +8,7 @@
     <div class="row">
         <!-- Left Column - Main Form -->
         <div class="col-lg-8">
-            <form asp-action="Add" method="post" enctype="multipart/form-data" id="addRecipeForm">
+            <form asp-action="Edit" asp-route-id="@ViewBag.RecipeId" method="post" enctype="multipart/form-data" id="addRecipeForm">
                 <div class="recipe-section">
                     <h3 class="section-title">Tên công thức</h3>
                     <input type="text" 
@@ -27,8 +27,15 @@
                                id="mainMediaInput"
                                accept="image/*,video/*">
                         <div class="upload-placeholder" id="mainMediaPlaceholder">
-                            <i class="bi bi-camera fs-1 text-muted"></i>
-                            <p class="text-muted mt-3">Nhấn để thêm ảnh hoặc video</p>
+                            @if (!string.IsNullOrEmpty(Model.ThumbnailUrl))
+                            {
+                                <img src="@Model.ThumbnailUrl" alt="Preview" class="upload-preview-img">
+                            }
+                            else
+                            {
+                                <i class="bi bi-camera fs-1 text-muted"></i>
+                                <p class="text-muted mt-3">Nhấn để thêm ảnh hoặc video</p>
+                            }
                         </div>
                     </div>
                 </div>
@@ -44,43 +51,119 @@
                 <div class="recipe-section">
                     <h3 class="section-title">Hướng dẫn từng bước</h3>
                     <div id="stepsContainer">
-                        <!-- Step 1 -->
-                        <div class="step-item" data-step="1">
-                            <div class="step-header" data-bs-toggle="collapse" data-bs-target="#step1">
-                                <span class="step-label">Bước 1:</span>
-                                <i class="bi bi-chevron-down"></i>
-                            </div>
-                            <div class="collapse show" id="step1">
-                                <div class="step-content">
-                                    <label class="form-label">Mô tả bước</label>
-                                    <textarea class="form-control mb-3" 
-                                              name="Steps[0].Instruction" 
-                                              rows="3"
-                                              placeholder="Nhập mô tả chi tiết cho bước này..."></textarea>
-                                    
-                                    <label class="form-label">Ảnh/Video minh họa (có thể chọn nhiều)</label>
-                                    <div class="step-media-container">
-                                        <input type="file" 
-                                               name="Steps[0].StepMedia" 
-                                               class="d-none step-media-input"
-                                               accept="image/*,video/*"
-                                               multiple
-                                               data-step="0">
-                                        <div class="step-media-upload-btn" onclick="this.previousElementSibling.click()">
-                                            <i class="bi bi-plus-circle"></i>
-                                            <span>Thêm ảnh/video</span>
-                                        </div>
-                                        <div class="step-media-grid" id="mediaGrid0"></div>
+                        @if (Model.Steps != null && Model.Steps.Any())
+                        {
+                            @for (int i = 0; i < Model.Steps.Count; i++)
+                            {
+                                var step = Model.Steps[i];
+                                var stepNumber = i + 1;
+                                <div class="step-item" data-step="@(stepNumber)">
+                                    <div class="step-header @(i == 0 ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#step@(stepNumber)">
+                                        <span class="step-label">Bước @(stepNumber):</span>
+                                        <i class="bi bi-chevron-down"></i>
                                     </div>
-                                    
-                                    <button type="button" class="btn btn-delete-step" onclick="deleteStep(1)">
-                                        <i class="bi bi-x"></i> Xóa bước
-                                    </button>
+                                    <div class="collapse @(i == 0 ? "show" : "")" id="step@(stepNumber)">
+                                        <div class="step-content">
+                                            <input type="hidden" name="Steps[@i].StepNumber" value="@(stepNumber)" />
+                                            <label class="form-label">Mô tả bước</label>
+                                            <textarea class="form-control mb-3" 
+                                                      name="Steps[@i].Instruction" 
+                                                      rows="3"
+                                                      placeholder="Nhập mô tả chi tiết cho bước này...">@step.Instruction</textarea>
+                                            
+                                            <label class="form-label">Ảnh/Video minh họa (có thể chọn nhiều)</label>
+                                            
+                                            @* Hidden inputs for existing media - OUTSIDE grid to prevent deletion *@
+                                            @if (step.ExistingMediaUrls != null && step.ExistingMediaUrls.Any())
+                                            {
+                                                int mediaIndex = 0;
+                                                @foreach (var mediaUrl in step.ExistingMediaUrls)
+                                                {
+                                                    <input type="hidden" name="Steps[@i].ExistingMediaUrls[@mediaIndex]" value="@mediaUrl" class="existing-media-url" />
+                                                    mediaIndex++;
+                                                }
+                                            }
+                                            
+                                            <div class="step-media-container">
+                                                <input type="file" 
+                                                       name="Steps[@i].StepMedia" 
+                                                       class="d-none step-media-input"
+                                                       accept="image/*,video/*"
+                                                       multiple
+                                                       data-step="@(stepNumber)">
+                                                <div class="step-media-upload-btn" onclick="this.previousElementSibling.click()">
+                                                    <i class="bi bi-plus-circle"></i>
+                                                    <span>Thêm ảnh/video</span>
+                                                </div>
+                                                <div class="step-media-grid" id="mediaGrid@(stepNumber)">
+                                                    @if (step.ExistingMediaUrls != null && step.ExistingMediaUrls.Any())
+                                                    {
+                                                        @foreach (var mediaUrl in step.ExistingMediaUrls)
+                                                        {
+                                                            <div class="step-media-item">
+                                                                @if (mediaUrl.Contains(".mp4") || mediaUrl.Contains(".mov") || mediaUrl.Contains(".avi"))
+                                                                {
+                                                                    <video src="@mediaUrl"></video>
+                                                                    <div class="video-overlay"><i class="bi bi-play-circle"></i></div>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <img src="@mediaUrl" alt="Existing media">
+                                                                }
+                                                                <div class="existing-media-badge">Hiện tại</div>
+                                                            </div>
+                                                        }
+                                                    }
+                                                </div>
+                                            </div>
+                                            
+                                            <button type="button" class="btn btn-delete-step" onclick="deleteStep(@(stepNumber))">
+                                                <i class="bi bi-x"></i> Xóa bước
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <!-- Default step nếu chưa có step nào -->
+                            <div class="step-item" data-step="1">
+                                <div class="step-header" data-bs-toggle="collapse" data-bs-target="#step1">
+                                    <span class="step-label">Bước 1:</span>
+                                    <i class="bi bi-chevron-down"></i>
+                                </div>
+                                <div class="collapse show" id="step1">
+                                    <div class="step-content">
+                                        <input type="hidden" name="Steps[0].StepNumber" value="1" />
+                                        <label class="form-label">Mô tả bước</label>
+                                        <textarea class="form-control mb-3" 
+                                                  name="Steps[0].Instruction" 
+                                                  rows="3"
+                                                  placeholder="Nhập mô tả chi tiết cho bước này..."></textarea>
+                                        
+                                        <label class="form-label">Ảnh/Video minh họa (có thể chọn nhiều)</label>
+                                        <div class="step-media-container">
+                                            <input type="file" 
+                                                   name="Steps[0].StepMedia" 
+                                                   class="d-none step-media-input"
+                                                   accept="image/*,video/*"
+                                                   multiple
+                                                   data-step="1">
+                                            <div class="step-media-upload-btn" onclick="this.previousElementSibling.click()">
+                                                <i class="bi bi-plus-circle"></i>
+                                                <span>Thêm ảnh/video</span>
+                                            </div>
+                                            <div class="step-media-grid" id="mediaGrid1"></div>
+                                        </div>
+                                        
+                                        <button type="button" class="btn btn-delete-step" onclick="deleteStep(1)">
+                                            <i class="bi bi-x"></i> Xóa bước
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Step 2 placeholder removed - default only one step -->
+                        }
                     </div>
 
                     <button type="button" class="btn btn-add-step" onclick="addStep()">
@@ -90,7 +173,7 @@
 
                 <div class="recipe-section">
                     <button type="submit" class="btn btn-save-recipe" id="submitBtn">
-                        <span class="btn-text">Đăng công thức</span>
+                        <span class="btn-text">Cập nhật công thức</span>
                         <span class="spinner-border spinner-border-sm d-none" role="status"></span>
                     </button>
                 </div>
@@ -148,7 +231,6 @@
                         <input type="number" 
                                class="form-control time-input" 
                                asp-for="CookTime" 
-                               value="30"
                                min="1"
                                max="1440"
                                required>
@@ -162,25 +244,25 @@
                     <h5 class="recipe-info-title">Độ khó</h5>
                     <div class="difficulty-buttons">
                         <button type="button" 
-                                class="btn btn-difficulty active" 
+                                class="btn btn-difficulty @(Model.Level == "dễ" ? "active" : "")" 
                                 data-level="dễ"
                                 onclick="selectDifficulty(this, 'dễ')">
                             Dễ
                         </button>
                         <button type="button" 
-                                class="btn btn-difficulty" 
+                                class="btn btn-difficulty @(Model.Level == "trung bình" ? "active" : "")" 
                                 data-level="trung bình"
                                 onclick="selectDifficulty(this, 'trung bình')">
                             Trung bình
                         </button>
                         <button type="button" 
-                                class="btn btn-difficulty" 
+                                class="btn btn-difficulty @(Model.Level == "khó" ? "active" : "")" 
                                 data-level="khó"
                                 onclick="selectDifficulty(this, 'khó')">
                             Khó
                         </button>
                     </div>
-                    <input type="hidden" asp-for="Level" id="levelInput" value="dễ">
+                    <input type="hidden" asp-for="Level" id="levelInput" value="@Model.Level">
                 </div>
             </div>
         </div>
@@ -194,8 +276,9 @@
         const mockIngredients = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.IngredientSuggestions ?? new List<string>()));
         const mockCategories = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.TypeSuggestions ?? new List<string>()));
 
-        let ingredientList = [];
-        let categoryList = [];
+        // Load existing data
+        let ingredientList = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Ingredients ?? new List<string>()));
+        let categoryList = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.RecipeTypes ?? new List<string>()));
 
         function setupAutocomplete(inputId, dropdownId, dataSource, onSelect) {
             const input = document.getElementById(inputId);
@@ -221,8 +304,8 @@
                         div.className = 'autocomplete-item';
                         div.textContent = item;
                         div.onclick = function() {
-                            input.value = item; // Set input value to selected item
-                            onSelect(); // Call without parameter, let function read from input
+                            input.value = item;
+                            onSelect();
                             dropdown.style.display = 'none';
                         };
                         dropdown.appendChild(div);
@@ -232,14 +315,12 @@
                 }
             });
 
-            // Close dropdown when clicking outside
             document.addEventListener('click', function(e) {
                 if (!input.contains(e.target) && !dropdown.contains(e.target)) {
                     dropdown.style.display = 'none';
                 }
             });
 
-            // Enter key to add
             input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -262,13 +343,8 @@
             
             if (!ingredientList.includes(value)) {
                 ingredientList.push(value);
-                const container = document.getElementById('ingredientTags');
-                const tag = document.createElement('span');
-                tag.className = 'recipe-tag';
-                tag.innerHTML = `${value} <button type="button" onclick="removeIngredientTag(this, '${value}')">×</button>`;
-                container.appendChild(tag);
+                renderIngredientTags();
                 
-                // Nếu không có trong danh sách, thêm vào local để gợi ý ở lần sau trong session
                 if (!mockIngredients.includes(value)) {
                     mockIngredients.push(value);
                 }
@@ -286,11 +362,7 @@
             
             if (!categoryList.includes(value)) {
                 categoryList.push(value);
-                const container = document.getElementById('categoryTags');
-                const tag = document.createElement('span');
-                tag.className = 'recipe-tag';
-                tag.innerHTML = `${value} <button type="button" onclick="removeCategoryTag(this, '${value}')">×</button>`;
-                container.appendChild(tag);
+                renderCategoryTags();
                 
                 if (!mockCategories.includes(value)) {
                     mockCategories.push(value);
@@ -301,23 +373,43 @@
             document.getElementById('categoryDropdown').style.display = 'none';
         }
 
-        function removeIngredientTag(btn, value) {
-            ingredientList = ingredientList.filter(item => item !== value);
-            btn.parentElement.remove();
+        function renderIngredientTags() {
+            const container = document.getElementById('ingredientTags');
+            container.innerHTML = '';
+            ingredientList.forEach(value => {
+                const tag = document.createElement('span');
+                tag.className = 'recipe-tag';
+                tag.innerHTML = `${value} <button type="button" onclick="removeIngredientTag('${value}')">×</button>`;
+                container.appendChild(tag);
+            });
         }
 
-        function removeCategoryTag(btn, value) {
+        function renderCategoryTags() {
+            const container = document.getElementById('categoryTags');
+            container.innerHTML = '';
+            categoryList.forEach(value => {
+                const tag = document.createElement('span');
+                tag.className = 'recipe-tag';
+                tag.innerHTML = `${value} <button type="button" onclick="removeCategoryTag('${value}')">×</button>`;
+                container.appendChild(tag);
+            });
+        }
+
+        function removeIngredientTag(value) {
+            ingredientList = ingredientList.filter(item => item !== value);
+            renderIngredientTags();
+        }
+
+        function removeCategoryTag(value) {
             categoryList = categoryList.filter(item => item !== value);
-            btn.parentElement.remove();
+            renderCategoryTags();
         }
 
         function addStep() {
             const stepsContainer = document.getElementById('stepsContainer');
-            
-            // Đếm số bước hiện có thay vì dùng stepCount
             const currentSteps = stepsContainer.querySelectorAll('.step-item');
             const newStepNumber = currentSteps.length + 1;
-            const newStepIndex = currentSteps.length; // 0-based index for form
+            const newStepIndex = currentSteps.length;
             
             const stepHtml = `
                 <div class="step-item" data-step="${newStepNumber}">
@@ -327,6 +419,7 @@
                     </div>
                     <div class="collapse" id="step${newStepNumber}">
                         <div class="step-content">
+                            <input type="hidden" name="Steps[${newStepIndex}].StepNumber" value="${newStepNumber}" />
                             <label class="form-label">Mô tả bước</label>
                             <textarea class="form-control mb-3" 
                                       name="Steps[${newStepIndex}].Instruction" 
@@ -340,12 +433,12 @@
                                        class="d-none step-media-input"
                                        accept="image/*,video/*"
                                        multiple
-                                       data-step="${newStepIndex}">
+                                       data-step="${newStepNumber}">
                                 <div class="step-media-upload-btn" onclick="this.previousElementSibling.click()">
                                     <i class="bi bi-plus-circle"></i>
                                     <span>Thêm ảnh/video</span>
                                 </div>
-                                <div class="step-media-grid" id="mediaGrid${newStepIndex}"></div>
+                                <div class="step-media-grid" id="mediaGrid${newStepNumber}"></div>
                             </div>
                             
                             <button type="button" class="btn btn-delete-step" onclick="deleteStep(${newStepNumber})">
@@ -361,15 +454,11 @@
         function deleteStep(stepNum) {
             const stepItem = document.querySelector(`[data-step="${stepNum}"]`);
             if (stepItem) {
-                // Xóa step và media files liên quan
-                const stepIndex = stepNum - 1;
-                if (stepMediaFiles[stepIndex]) {
-                    delete stepMediaFiles[stepIndex];
+                if (stepMediaFiles[stepNum]) {
+                    delete stepMediaFiles[stepNum];
                 }
                 
                 stepItem.remove();
-                
-                // Reindex lại tất cả các steps
                 reindexSteps();
             }
         }
@@ -377,24 +466,19 @@
         function reindexSteps() {
             const stepsContainer = document.getElementById('stepsContainer');
             const stepItems = stepsContainer.querySelectorAll('.step-item');
-            
-            // Tạo object mới cho stepMediaFiles
             const newStepMediaFiles = {};
             
             stepItems.forEach((stepItem, index) => {
                 const newStepNumber = index + 1;
                 const newStepIndex = index;
                 
-                // Update data-step attribute
                 stepItem.setAttribute('data-step', newStepNumber);
                 
-                // Update step header
                 const stepLabel = stepItem.querySelector('.step-label');
                 if (stepLabel) {
                     stepLabel.textContent = `Bước ${newStepNumber}:`;
                 }
                 
-                // Update collapse target and id
                 const stepHeader = stepItem.querySelector('.step-header');
                 const collapseDiv = stepItem.querySelector('.collapse');
                 if (stepHeader && collapseDiv) {
@@ -402,7 +486,13 @@
                     collapseDiv.setAttribute('id', `step${newStepNumber}`);
                 }
                 
-                // Update form input names
+                // Update hidden StepNumber input
+                const hiddenStepNumber = stepItem.querySelector('input[type="hidden"][name*="StepNumber"]');
+                if (hiddenStepNumber) {
+                    hiddenStepNumber.setAttribute('name', `Steps[${newStepIndex}].StepNumber`);
+                    hiddenStepNumber.value = newStepNumber;
+                }
+                
                 const textarea = stepItem.querySelector('textarea');
                 if (textarea) {
                     textarea.setAttribute('name', `Steps[${newStepIndex}].Instruction`);
@@ -411,37 +501,36 @@
                 const fileInput = stepItem.querySelector('.step-media-input');
                 if (fileInput) {
                     fileInput.setAttribute('name', `Steps[${newStepIndex}].StepMedia`);
-                    const oldStepIndex = fileInput.getAttribute('data-step');
-                    fileInput.setAttribute('data-step', newStepIndex);
+                    const oldStepNumber = fileInput.getAttribute('data-step');
+                    fileInput.setAttribute('data-step', newStepNumber);
                     
-                    // Di chuyển media files sang index mới
-                    if (stepMediaFiles[oldStepIndex]) {
-                        newStepMediaFiles[newStepIndex] = stepMediaFiles[oldStepIndex];
+                    if (stepMediaFiles[oldStepNumber]) {
+                        newStepMediaFiles[newStepNumber] = stepMediaFiles[oldStepNumber];
                     }
                 }
                 
-                // Update media grid id
                 const mediaGrid = stepItem.querySelector('.step-media-grid');
                 if (mediaGrid) {
-                    mediaGrid.setAttribute('id', `mediaGrid${newStepIndex}`);
+                    mediaGrid.setAttribute('id', `mediaGrid${newStepNumber}`);
                 }
                 
-                // Update delete button
+                // Update existing media URLs hidden inputs
+                const existingMediaInputs = stepItem.querySelectorAll('.existing-media-url');
+                existingMediaInputs.forEach((input, mediaIdx) => {
+                    input.setAttribute('name', `Steps[${newStepIndex}].ExistingMediaUrls[${mediaIdx}]`);
+                });
+                
                 const deleteBtn = stepItem.querySelector('.btn-delete-step');
                 if (deleteBtn) {
                     deleteBtn.setAttribute('onclick', `deleteStep(${newStepNumber})`);
                 }
             });
             
-            // Cập nhật stepMediaFiles với index mới
             stepMediaFiles = newStepMediaFiles;
             
-            // Re-render media grids với index mới
-            Object.keys(stepMediaFiles).forEach(stepIndex => {
-                renderMediaGrid(parseInt(stepIndex));
+            Object.keys(stepMediaFiles).forEach(stepNumber => {
+                renderMediaGrid(parseInt(stepNumber));
             });
-            
-            console.log('Steps reindexed, total steps:', stepItems.length);
         }
 
         function selectDifficulty(btn, level) {
@@ -450,10 +539,8 @@
             document.getElementById('levelInput').value = level;
         }
 
-        // Object lưu files cho mỗi step
         let stepMediaFiles = {};
 
-        // Image preview handlers
         document.getElementById('mainMediaInput')?.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -474,34 +561,44 @@
         document.addEventListener('change', function(e) {
             if (e.target.classList.contains('step-media-input')) {
                 const input = e.target;
-                const stepIndex = input.getAttribute('data-step');
+                const stepNumber = input.getAttribute('data-step');
                 const files = Array.from(input.files);
                 
                 if (files.length > 0) {
                     // Khởi tạo array nếu chưa có
-                    if (!stepMediaFiles[stepIndex]) {
-                        stepMediaFiles[stepIndex] = [];
+                    if (!stepMediaFiles[stepNumber]) {
+                        stepMediaFiles[stepNumber] = [];
                     }
                     
                     // Thêm files mới vào
-                    stepMediaFiles[stepIndex] = stepMediaFiles[stepIndex].concat(files);
+                    stepMediaFiles[stepNumber] = stepMediaFiles[stepNumber].concat(files);
                     
                     // Render grid
-                    renderMediaGrid(stepIndex);
+                    renderMediaGrid(stepNumber);
                 }
             }
         });
 
-        function renderMediaGrid(stepIndex) {
-            const gridContainer = document.getElementById(`mediaGrid${stepIndex}`);
+        function renderMediaGrid(stepNumber) {
+            const gridContainer = document.getElementById(`mediaGrid${stepNumber}`);
             if (!gridContainer) {
-                console.warn(`Media grid container not found for step ${stepIndex}`);
+                console.warn(`Media grid container not found for step ${stepNumber}`);
                 return;
             }
             
-            const files = stepMediaFiles[stepIndex] || [];
+            const files = stepMediaFiles[stepNumber] || [];
+            
+            // Keep existing media (items with class 'existing-media-badge')
+            const existingMediaItems = Array.from(gridContainer.querySelectorAll('.step-media-item')).filter(item => 
+                item.querySelector('.existing-media-badge')
+            );
+            
             gridContainer.innerHTML = '';
             
+            // Re-add existing media first
+            existingMediaItems.forEach(item => gridContainer.appendChild(item));
+            
+            // Then add new files
             files.forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -520,10 +617,10 @@
                     
                     mediaItem.innerHTML = `
                         ${mediaContent}
-                        <button type="button" class="btn-remove-media" onclick="removeMediaFile(${stepIndex}, ${index})">
+                        <button type="button" class="btn-remove-media" onclick="removeMediaFile(${stepNumber}, ${index})">
                             <i class="bi bi-x"></i>
                         </button>
-                        <div class="media-order">${index + 1}</div>
+                        <div class="media-order">${existingMediaItems.length + index + 1}</div>
                     `;
                     
                     gridContainer.appendChild(mediaItem);
@@ -532,23 +629,18 @@
             });
         }
 
-        function removeMediaFile(stepIndex, fileIndex) {
-            if (stepMediaFiles[stepIndex]) {
-                stepMediaFiles[stepIndex].splice(fileIndex, 1);
-                renderMediaGrid(stepIndex);
+        function removeMediaFile(stepNumber, fileIndex) {
+            if (stepMediaFiles[stepNumber]) {
+                stepMediaFiles[stepNumber].splice(fileIndex, 1);
+                renderMediaGrid(stepNumber);
             }
         }
 
-        // Chuẩn bị form trước khi submit
         function prepareFormSubmit(event) {
-            console.log('=== PREPARING FORM SUBMIT ===');
             const form = document.getElementById('addRecipeForm');
             
-            // Xóa các hidden input cũ (nếu có)
             form.querySelectorAll('.dynamic-hidden-input').forEach(el => el.remove());
             
-            // Thêm ingredients vào form
-            console.log('Ingredients:', ingredientList);
             ingredientList.forEach((ingredient, index) => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
@@ -558,8 +650,6 @@
                 form.appendChild(input);
             });
             
-            // Thêm categories vào form
-            console.log('Categories:', categoryList);
             categoryList.forEach((category, index) => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
@@ -569,54 +659,32 @@
                 form.appendChild(input);
             });
             
-            // Gán files từ stepMediaFiles vào các input tương ứng
-            console.log('Step Media Files:', stepMediaFiles);
-            Object.keys(stepMediaFiles).forEach(stepIndex => {
-                const files = stepMediaFiles[stepIndex];
+            Object.keys(stepMediaFiles).forEach(stepNumber => {
+                const files = stepMediaFiles[stepNumber];
                 if (files && files.length > 0) {
-                    console.log(`Step ${stepIndex}: ${files.length} files`);
-                    const input = document.querySelector(`input[data-step="${stepIndex}"]`);
+                    const input = document.querySelector(`input[data-step="${stepNumber}"]`);
                     if (input) {
-                        // Tạo DataTransfer để set files cho input
                         const dataTransfer = new DataTransfer();
                         files.forEach(file => {
-                            console.log(`  - ${file.name} (${file.size} bytes)`);
                             dataTransfer.items.add(file);
                         });
                         input.files = dataTransfer.files;
-                    } else {
-                        console.error(`Input not found for step ${stepIndex}`);
                     }
                 }
             });
             
-            // Log form data
-            const formData = new FormData(form);
-            console.log('=== FORM DATA ===');
-            for (let [key, value] of formData.entries()) {
-                if (value instanceof File) {
-                    console.log(`${key}: [File] ${value.name} (${value.size} bytes)`);
-                } else {
-                    console.log(`${key}: ${value}`);
-                }
-            }
-            
-            // Kiểm tra validation
             if (!form.checkValidity()) {
-                console.error('Form validation failed!');
                 event.preventDefault();
                 event.stopPropagation();
                 form.classList.add('was-validated');
                 return false;
             }
             
-            // Show loading
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
-            submitBtn.querySelector('.btn-text').textContent = 'Đang lưu...';
+            submitBtn.querySelector('.btn-text').textContent = 'Đang cập nhật...';
             submitBtn.querySelector('.spinner-border').classList.remove('d-none');
             
-            console.log('Form is valid, submitting...');
             return true;
         }
 
@@ -625,10 +693,13 @@
             setupAutocomplete('ingredientInput', 'ingredientDropdown', mockIngredients, addIngredientTag);
             setupAutocomplete('categoryInput', 'categoryDropdown', mockCategories, addCategoryTag);
             
+            // Render existing tags
+            renderIngredientTags();
+            renderCategoryTags();
+            
             // Attach submit handler
             const form = document.getElementById('addRecipeForm');
             form.addEventListener('submit', function(e) {
-                console.log('Form submit event triggered');
                 if (!prepareFormSubmit(e)) {
                     e.preventDefault();
                     return false;
