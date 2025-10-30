@@ -7,7 +7,7 @@
 <div class="add-recipe-container">
     <div class="row">
         <!-- Left Column - Main Form -->
-        <div class="col-lg-8">
+        <div class="col-lg-8 recipe-main-column">
             <form asp-action="Edit" asp-route-id="@ViewBag.RecipeId" method="post" enctype="multipart/form-data" id="addRecipeForm">
                 <div class="recipe-section">
                     <h3 class="section-title">Tên công thức</h3>
@@ -48,7 +48,7 @@
                               placeholder="VD: 500g Ức gà không xương không da&#10;3 muỗng canh Mật ong&#10;2 muỗng canh Nước cốt chanh&#10;1 muỗng canh Dầu ô liu"></textarea>
                 </div>
 
-                <div class="recipe-section">
+                <div class="recipe-section recipe-steps-section">
                     <h3 class="section-title">Hướng dẫn từng bước</h3>
                     <div id="stepsContainer">
                         @if (Model.Steps != null && Model.Steps.Any())
@@ -171,7 +171,7 @@
                     </button>
                 </div>
 
-                <div class="recipe-section">
+                <div class="recipe-section recipe-submit-section">
                     <button type="submit" class="btn btn-save-recipe" id="submitBtn">
                         <span class="btn-text">Cập nhật công thức</span>
                         <span class="spinner-border spinner-border-sm d-none" role="status"></span>
@@ -181,7 +181,7 @@
         </div>
 
         <!-- Right Column - Sidebar Info -->
-        <div class="col-lg-4">
+        <div class="col-lg-4 recipe-sidebar-column">
             <div class="recipe-sidebar">
                 <!-- Nguyên liệu -->
                 <div class="recipe-info-section">
