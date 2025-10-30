@@ -36,6 +36,11 @@
                                     <i class="bi bi-person-plus"></i> @(recipe.IsFollowing ? "Following" : "Follow")
                                 </button>
                             }
+                            else
+                            {
+                                <!-- Giữ khoảng trống để tránh bị lệch UI -->
+                                <div style="height: 38px; margin-top: 8px;"></div>
+                            }
                         </div>
 
                         <!-- Bọc ảnh + nội dung bằng link -->
@@ -226,7 +231,7 @@ function createRecipeCard(recipe) {
                  data-user-id="${recipe.userId}"
                  data-is-following="${recipe.isFollowing}">
             <i class="bi bi-person-plus"></i> ${recipe.isFollowing ? 'Following' : 'Follow'}
-         </button>` : '';
+         </button>` : '<div style="height: 38px; margin-top: 8px;"></div>';
 
     return `
         <div class="col">
