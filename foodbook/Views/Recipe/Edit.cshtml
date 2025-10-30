@@ -48,6 +48,84 @@
                               placeholder="VD: 500g Ức gà không xương không da&#10;3 muỗng canh Mật ong&#10;2 muỗng canh Nước cốt chanh&#10;1 muỗng canh Dầu ô liu"></textarea>
                 </div>
 
+                <!-- Mobile-only: Ingredients & Categories before steps -->
+                <div class="recipe-info-section d-lg-none">
+                    <h5 class="recipe-info-title">Nguyên liệu</h5>
+                    <p class="recipe-info-subtitle">Thêm nguyên liệu/từ vực gắn 50</p>
+                    <div class="input-with-add-btn">
+                        <input type="text"
+                               class="form-control autocomplete-input"
+                               id="ingredientInput"
+                               placeholder="Nhập nguyên liệu...">
+                        <button type="button" class="btn btn-add-circle" onclick="addIngredientTag()">
+                            <i class="bi bi-plus-circle"></i>
+                        </button>
+                    </div>
+                    <div class="autocomplete-dropdown" id="ingredientDropdown"></div>
+                    <div class="tags-container mt-3" id="ingredientTags"></div>
+                </div>
+
+                <div class="recipe-info-section d-lg-none">
+                    <h5 class="recipe-info-title">Phân Loại</h5>
+                    <p class="recipe-info-subtitle">Thêm phân loại (VD: Việt nam)</p>
+                    <div class="input-with-add-btn">
+                        <input type="text"
+                               class="form-control autocomplete-input"
+                               id="categoryInput"
+                               placeholder="Nhập phân loại...">
+                        <button type="button" class="btn btn-add-circle" onclick="addCategoryTag()">
+                            <i class="bi bi-plus-circle"></i>
+                        </button>
+                    </div>
+                    <div class="autocomplete-dropdown" id="categoryDropdown"></div>
+                    <div class="tags-container mt-3" id="categoryTags"></div>
+                </div>
+
+                <!-- Mobile-only: Thời gian nấu -->
+                <div class="recipe-info-section d-lg-none">
+                    <h5 class="recipe-info-title">Thời gian nấu</h5>
+                    <div class="time-input-group">
+                        <i class="bi bi-clock"></i>
+                        <input type="number"
+                               class="form-control time-input"
+                               asp-for="CookTime"
+                               name="CookTime"
+                               id="CookTime"
+                               value="@Model.CookTime"
+                               min="1"
+                               max="1440"
+                               required>
+                        <span class="time-unit">phút</span>
+                    </div>
+                    <span asp-validation-for="CookTime" class="text-danger small"></span>
+                </div>
+
+                <!-- Mobile-only: Độ khó -->
+                <div class="recipe-info-section d-lg-none">
+                    <h5 class="recipe-info-title">Độ khó</h5>
+                    <div class="difficulty-buttons">
+                        <button type="button"
+                                class="btn btn-difficulty @(Model.Level == "dễ" ? "active" : "")"
+                                data-level="dễ"
+                                onclick="selectDifficulty(this, 'dễ')">
+                            Dễ
+                        </button>
+                        <button type="button"
+                                class="btn btn-difficulty @(Model.Level == "bình thường" ? "active" : "")"
+                                data-level="bình thường"
+                                onclick="selectDifficulty(this, 'bình thường')">
+                            Bình thường
+                        </button>
+                        <button type="button"
+                                class="btn btn-difficulty @(Model.Level == "khó" ? "active" : "")"
+                                data-level="khó"
+                                onclick="selectDifficulty(this, 'khó')">
+                            Khó
+                        </button>
+                    </div>
+                    <input type="hidden" asp-for="Level" id="levelInput" value="@Model.Level">
+                </div>
+
                 <div class="recipe-section">
                     <h3 class="section-title">Hướng dẫn từng bước</h3>
                     <div id="stepsContainer">
@@ -180,8 +258,8 @@
             </form>
         </div>
 
-        <!-- Right Column - Sidebar Info -->
-        <div class="col-lg-4">
+        <!-- Right Column - Sidebar Info (hidden on mobile to avoid duplicate inputs) -->
+        <div class="col-lg-4 d-none d-lg-block">
             <div class="recipe-sidebar">
                 <!-- Nguyên liệu -->
                 <div class="recipe-info-section">
