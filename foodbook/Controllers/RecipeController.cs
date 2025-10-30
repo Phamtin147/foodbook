@@ -61,12 +61,7 @@ namespace foodbook.Controllers
                 ViewBag.TypeSuggestions = new List<string>();
             }
 
-            // Return initialized model to prevent NullReferenceException in view
-            return View(new AddRecipeViewModel 
-            { 
-                CookTime = 30, // Default cook time
-                Level = "dễ"   // Default difficulty level
-            });
+            return View();
         }
 
         [HttpPost]

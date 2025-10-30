@@ -28,16 +28,14 @@
                                     <div class="fw-semibold user-name">@recipe.UserName</div>
                                 </a>
                             </div>
-                            <div class="follow-slot">
-                                @if (recipe.UserId != 0 && !recipe.IsOwnPost)
-                                {
-                                    <button class="btn @(recipe.IsFollowing ? "btn-outline-secondary" : "btn-success") rounded-pill px-3 mt-2 follow-btn follow-btn-sm" 
-                                            data-user-id="@recipe.UserId" 
-                                            data-is-following="@recipe.IsFollowing.ToString().ToLower()">
-                                        <i class="bi bi-person-plus"></i> @(recipe.IsFollowing ? "Following" : "Follow")
-                                    </button>
-                                }
-                            </div>
+                            @if (recipe.UserId != 0 && !recipe.IsOwnPost)
+                            {
+                                <button class="btn @(recipe.IsFollowing ? "btn-outline-secondary" : "btn-success") rounded-pill px-3 mt-2 follow-btn follow-btn-sm" 
+                                        data-user-id="@recipe.UserId" 
+                                        data-is-following="@recipe.IsFollowing.ToString().ToLower()">
+                                    <i class="bi bi-person-plus"></i> @(recipe.IsFollowing ? "Following" : "Follow")
+                                </button>
+                            }
                         </div>
 
                         <!-- Bọc ảnh + nội dung bằng link -->
@@ -245,7 +243,7 @@ function createRecipeCard(recipe) {
                             <div class="fw-semibold user-name">${recipe.userName}</div>
                         </a>
                     </div>
-                    <div class="follow-slot">${followButtonHtml}</div>
+                    ${followButtonHtml}
                 </div>
                 
                 <!-- Bọc ảnh + nội dung bằng link -->
