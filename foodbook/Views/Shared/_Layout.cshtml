@@ -61,29 +61,31 @@
                             <li class="nav-item">
                                 <a class="nav-link @(currentController == "Search" && currentAction == "Search" ? "text-green fw-bold" : "text-dark")" asp-area="" asp-controller="Search" asp-action="Search">Tìm kiếm</a>
                             </li>
-                            <!-- Mobile-only: Sidebar items moved into navbar dropdown -->
-                            <li class="nav-item dropdown d-lg-none">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="mobileMenuDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Menu
-                                </a>
-                                <ul class="dropdown-menu" aria-labelledby="mobileMenuDropdown">
-                                    <li><h6 class="dropdown-header">Tài khoản</h6></li>
-                                    <li><a class="dropdown-item @(isOwnProfile ? "active" : "")" href="/Profile/Info"><i class="bi bi-person me-2"></i>Hồ sơ của tôi</a></li>
-                                    <li><a class="dropdown-item @(currentController == "User" && currentAction == "Notebook" ? "active" : "")" asp-controller="User" asp-action="Notebook"><i class="bi bi-book me-2"></i>Sổ tay của tôi</a></li>
-                                    <li><a class="dropdown-item @(currentController == "Recipe" && currentAction == "Add" ? "active" : "")" asp-controller="Recipe" asp-action="Add"><i class="bi bi-plus-circle me-2"></i>Thêm công thức mới</a></li>
-                                    <li><a class="dropdown-item @(currentController == "Account" && currentAction == "Settings" ? "active" : "")" asp-controller="Account" asp-action="Settings"><i class="bi bi-gear me-2"></i>Cài đặt</a></li>
-                                    @if (Context.Session.IsAdmin())
-                                    {
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><h6 class="dropdown-header text-danger">Admin</h6></li>
-                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Dashboard"><i class="bi bi-house me-2"></i>Tổng quan hệ thống</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Users"><i class="bi bi-people me-2"></i>Quản lý người dùng</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ContentModeration"><i class="bi bi-file-check me-2"></i>Kiểm duyệt nội dung</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="CategoryManagement"><i class="bi bi-funnel me-2"></i>Quản lý phân loại</a></li>
-                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="IngredientManagement"><i class="bi bi-list-ul me-2"></i>Quản lý nguyên liệu</a></li>
-                                    }
-                                </ul>
-                            </li>
+                            @if (Context.Session.IsAdmin())
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-danger fw-bold" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-shield-check"></i> Admin
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Dashboard">
+                                            <i class="bi bi-house"></i> Tổng quan hệ thống
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="Users">
+                                            <i class="bi bi-people"></i> Quản lý người dùng
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="ContentModeration">
+                                            <i class="bi bi-file-check"></i> Kiểm duyệt nội dung
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="CategoryManagement">
+                                            <i class="bi bi-funnel"></i> Quản lý phân loại
+                                        </a></li>
+                                        <li><a class="dropdown-item" asp-controller="Admin" asp-action="IngredientManagement">
+                                            <i class="bi bi-list-ul"></i> Quản lý nguyên liệu
+                                        </a></li>
+                                    </ul>
+                                </li>
+                            }
                         </ul>
                         
                         <!-- Desktop User Profile - Only visible on desktop -->
