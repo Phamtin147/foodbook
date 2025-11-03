@@ -8,6 +8,9 @@
     var recipeTypesJson = System.Text.Json.JsonSerializer.Serialize(Model.RecipeTypes ?? new List<string>());
 }
 
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
 <!-- Search Bar -->
 <div class="search-bar-wrapper">
             <div class="search-input-group">
@@ -21,8 +24,16 @@
             </div>
         </div>
 
+        <!-- Advanced Search Toggle Button -->
+        <div class="advanced-search-toggle-wrapper" style="display: flex; justify-content: center; width: 100%; margin: 1rem 0 1.5rem 0;">
+            <button type="button" class="advanced-search-toggle-btn" id="advancedSearchToggle" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 500; font-size: 1rem; border: 2px solid #1dd75b; color: #1dd75b; background: white; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                <i class="fas fa-filter"></i> Tìm kiếm nâng cao
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </button>
+        </div>
+
         <!-- Filters -->
-        <div class="filters-wrapper">
+        <div class="filters-wrapper" id="filtersWrapper" hidden style="display: none !important;">
             <div class="row">
                 <!-- Nguyên liệu -->
                 <div class="col-md-4">
@@ -135,17 +146,25 @@
                             </div>
                             <div class="recipe-card-body">
                                 <h5 class="recipe-title">@recipe.RecipeName</h5>
-                                <div class="recipe-info">
-                                    <div class="recipe-likes">
-                                        <i class="fas fa-thumbs-up"></i>
-                                        <span>@recipe.LikesCount</span>
-                                    </div>
-                                    <div class="recipe-difficulty">
-                                        Độ khó: <strong>@recipe.Level</strong>
-                                    </div>
-                                </div>
                                 <div class="recipe-author">
                                     <a href="@Url.Action("Info", "Profile", new { id = recipe.UserId })">@recipe.UserName</a>
+                                </div>
+                                <div class="recipe-difficulty">
+                                    Độ khó: <strong>@recipe.Level</strong>
+                                </div>
+                                <div class="recipe-info">
+                                    <div class="recipe-likes">
+                                        <i class="bi bi-hand-thumbs-up"></i>
+                                        <span>@recipe.LikesCount</span>
+                                    </div>
+                                    <div class="recipe-comments">
+                                        <i class="bi bi-chat"></i>
+                                        <span>@recipe.CommentsCount</span>
+                                    </div>
+                                    <div class="recipe-shares">
+                                        <i class="bi bi-share"></i>
+                                        <span>@recipe.SharesCount</span>
+                                    </div>
                                 </div>
                                 <div class="recipe-actions">
                                     <a href="@Url.Action("Detail", "Recipe", new { id = recipe.RecipeId })" class="btn-view-detail">
@@ -227,9 +246,67 @@
     color: white;
 }
 
+/* Advanced Search Toggle */
+.advanced-search-toggle-wrapper {
+    margin-bottom: 1.5rem;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.advanced-search-toggle-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 500;
+    font-size: 1rem;
+    border: 2px solid #1dd75b !important;
+    color: #1dd75b !important;
+    background: white !important;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.advanced-search-toggle-btn:hover {
+    background: #1dd75b;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(29, 215, 91, 0.3);
+}
+
+.advanced-search-toggle-btn.active {
+    background: #1dd75b;
+    color: white;
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.advanced-search-toggle-btn.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
 /* Filters */
 .filters-wrapper {
     margin-bottom: 2rem;
+    animation: slideDown 0.3s ease;
+}
+
+@@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .filter-card {
@@ -368,7 +445,7 @@
 
 /* Recipe Card Styles - Match Image */
 .recipe-card {
-    background: white;
+    background: #f8f9fa;
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -403,10 +480,10 @@
 }
 
 .recipe-card-body {
-    padding: 1.25rem;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
     flex: 1;
 }
 
@@ -427,35 +504,58 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.9rem;
+    gap: 1rem;
+    font-size: 1rem;
     color: #6c757d;
+    margin: 0.25rem 0;
+}
+
+.recipe-likes,
+.recipe-comments,
+.recipe-shares {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
 }
 
 .recipe-likes {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
     color: #3498db;
-    font-weight: 500;
 }
 
-.recipe-likes i {
-    font-size: 1rem;
+.recipe-comments {
+    color: #f39c12;
+}
+
+.recipe-shares {
+    color: #e74c3c;
+}
+
+.recipe-likes i,
+.recipe-comments i,
+.recipe-shares i {
+    font-size: 1.2rem;
 }
 
 .recipe-difficulty {
     color: #6c757d;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    margin-top: 0;
+    margin-bottom: 0.25rem;
 }
 
 .recipe-difficulty strong {
     color: #2c3e50;
+    font-weight: 600;
 }
 
 .recipe-author {
     font-size: 0.9rem;
     color: #16a34a;
     font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 0.25rem;
 }
 
 .recipe-author a {
@@ -471,29 +571,30 @@
 
 .recipe-actions {
     margin-top: auto;
-    padding-top: 0.75rem;
+    padding-top: 0.5rem;
 }
 
 .btn-view-detail {
     display: block;
     width: 100%;
     text-align: center;
-    padding: 0.65rem 1rem;
-    background-color: #f8f9fa;
-    color: #2c3e50;
+    padding: 0.75rem 1rem;
+    background-color: #1dd75b;
+    color: white;
     text-decoration: none;
     border-radius: 8px;
-    font-weight: 500;
-    font-size: 0.95rem;
-    border: 1px solid #dee2e6;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
     transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(29, 215, 91, 0.3);
 }
 
 .btn-view-detail:hover {
-    background-color: #e9ecef;
-    border-color: #ced4da;
-    color: #1a252f;
+    background-color: #16a34a;
+    color: white;
     transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(29, 215, 91, 0.4);
 }
 
 /* User Card Styles */
@@ -925,11 +1026,18 @@ let selectedTypes = [];
 
 // Initialize search functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Force hide filters wrapper immediately on load
+    const filtersWrapper = document.getElementById('filtersWrapper');
+    if (filtersWrapper) {
+        filtersWrapper.style.display = 'none';
+    }
+    
     initializeIngredientSearch();
     initializeTypeSearch();
     initializeBackToTop();
     initializeDifficultyFilter();
     initializeSearchTypeFilter();
+    initializeAdvancedSearchToggle();
     initializeUrlParameters();
     
     // Add event listener for search button
@@ -1045,17 +1153,25 @@ function updateSearchResults(results) {
                     </div>
                     <div class="recipe-card-body">
                         <h5 class="recipe-title">${recipe.recipeName}</h5>
-                        <div class="recipe-info">
-                            <div class="recipe-likes">
-                                <i class="fas fa-thumbs-up"></i>
-                                <span>${recipe.likesCount}</span>
-                            </div>
-                            <div class="recipe-difficulty">
-                                Độ khó: <strong>${recipe.level}</strong>
-                            </div>
-                        </div>
                         <div class="recipe-author">
                             <a href="/Profile/Info?id=${recipe.userId}">${recipe.userName}</a>
+                        </div>
+                        <div class="recipe-difficulty">
+                            Độ khó: <strong>${recipe.level}</strong>
+                        </div>
+                        <div class="recipe-info">
+                            <div class="recipe-likes">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                                <span>${recipe.likesCount || 0}</span>
+                            </div>
+                            <div class="recipe-comments">
+                                <i class="bi bi-chat"></i>
+                                <span>${recipe.commentsCount || 0}</span>
+                            </div>
+                            <div class="recipe-shares">
+                                <i class="bi bi-share"></i>
+                                <span>${recipe.sharesCount || 0}</span>
+                            </div>
                         </div>
                         <div class="recipe-actions">
                             <a href="/Recipe/Detail/${recipe.recipeId}" class="btn-view-detail">
@@ -1395,10 +1511,39 @@ function initializeDifficultyFilter() {
     });
 }
 
+// Initialize Advanced Search Toggle
+function initializeAdvancedSearchToggle() {
+    const toggleBtn = document.getElementById('advancedSearchToggle');
+    const filtersWrapper = document.getElementById('filtersWrapper');
+    
+    if (toggleBtn && filtersWrapper) {
+        // Ensure filters are hidden on load
+        filtersWrapper.hidden = true;
+        filtersWrapper.style.display = 'none';
+        
+        toggleBtn.addEventListener('click', function() {
+            const isVisible = !filtersWrapper.hidden && (filtersWrapper.style.display === 'block');
+            
+            if (isVisible) {
+                // Hide filters
+                filtersWrapper.hidden = true;
+                filtersWrapper.style.display = 'none';
+                toggleBtn.classList.remove('active');
+            } else {
+                // Show filters
+                filtersWrapper.hidden = false;
+                filtersWrapper.style.display = 'block';
+                toggleBtn.classList.add('active');
+            }
+        });
+    }
+}
+
 // Initialize URL parameters (handle filters from URL)
 function initializeUrlParameters() {
     const urlParams = new URLSearchParams(window.location.search);
     let shouldSearch = false;
+    let hasParams = false;
     
     // Check for ingredient parameter
     const ingredient = urlParams.get('ingredient');
@@ -1409,6 +1554,7 @@ function initializeUrlParameters() {
             selectedIngredients.push(decodedIngredient);
             updateSelectedIngredients();
             shouldSearch = true;
+            hasParams = true;
         }
     }
     
@@ -1420,6 +1566,7 @@ function initializeUrlParameters() {
         if (difficultyOption) {
             difficultyOption.classList.add('active');
             shouldSearch = true;
+            hasParams = true;
         }
     }
     
@@ -1432,6 +1579,19 @@ function initializeUrlParameters() {
             selectedTypes.push(decodedType);
             updateSelectedTypes();
             shouldSearch = true;
+            hasParams = true;
+        }
+    }
+    
+    // If URL has params (from tag click in newsfeed), automatically open the filters
+    if (hasParams) {
+        const toggleBtn = document.getElementById('advancedSearchToggle');
+        const filtersWrapper = document.getElementById('filtersWrapper');
+        
+        if (toggleBtn && filtersWrapper) {
+            filtersWrapper.hidden = false;
+            filtersWrapper.style.display = 'block';
+            toggleBtn.classList.add('active');
         }
     }
     

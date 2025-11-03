@@ -71,6 +71,19 @@ namespace foodbook.Controllers
                             .Where(x => x.recipe_id == recipe.recipe_id)
                             .Get();
 
+                        // Get comments count
+                        var commentsCount = await _supabaseService.Client
+                            .From<Comment>()
+                            .Select("comment_id")
+                            .Where(x => x.recipe_id == recipe.recipe_id)
+                            .Get();
+
+                        // Get shares count
+                        var sharesCount = await _supabaseService.Client
+                            .From<Share>()
+                            .Where(x => x.recipe_id == recipe.recipe_id)
+                            .Get();
+
                         notebookItems.Add(new NotebookViewModel
                         {
                             RecipeId = recipe.recipe_id ?? 0,
@@ -81,6 +94,8 @@ namespace foodbook.Controllers
                             UserName = userInfo?.full_name ?? "User",
                             UserAvatarUrl = userInfo?.avatar_img ?? "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
                             LikesCount = likesCount.Models.Count,
+                            CommentsCount = commentsCount.Models.Count,
+                            SharesCount = sharesCount.Models.Count,
                             CreatedAt = recipe.created_at
                         });
                     }

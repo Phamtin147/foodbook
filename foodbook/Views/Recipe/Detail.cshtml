@@ -26,19 +26,19 @@
     <div class="d-flex align-items-center gap-2">
         @if (!string.IsNullOrEmpty(Model.Author?.avatar_img))
         {
-            <img src="@Model.Author.avatar_img" alt="@Model.Author?.username" 
-                 class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">
+            <img src="@Model.Author.avatar_img" alt="@Model.Author?.full_name ?? Model.Author?.username" 
+                 class="rounded-circle recipe-author-avatar" style="width: 56px; height: 56px; object-fit: cover;">
         }
         else
         {
-            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" 
-                 style="width: 28px; height: 28px; font-size: 12px;">
+            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center recipe-author-avatar" 
+                 style="width: 56px; height: 56px; font-size: 24px;">
                 <i class="bi bi-person"></i>
             </div>
         }
         <a href="@Url.Action("Info", "Profile", new { id = Model.Author?.user_id })" 
-           class="text-decoration-none text-dark fw-medium" style="font-size: 14px;">
-            @Model.Author?.username
+           class="text-decoration-none text-dark recipe-author-name">
+            @(Model.Author?.full_name ?? Model.Author?.username ?? "Người dùng")
         </a>
         @if (!Model.IsOwnRecipe)
         {
@@ -88,9 +88,9 @@
         <i class="bi bi-share"></i>
         <span id="shareCount">@Model.ShareCount</span>
     </span>
-    <span class="stat-item">
+    <span class="stat-item cook-time-stat">
         <i class="bi bi-clock"></i>
-        @Model.Recipe.cook_time phút
+        <strong>@Model.Recipe.cook_time phút</strong>
     </span>
 </div>
 
@@ -104,7 +104,7 @@
 
 <!-- Description Section -->
 <div class="recipe-section mb-4">
-    <h5 class="section-title mb-3">Mô tả công thức</h5>
+    <h5 class="section-title mb-3">Mô tả nguyên liệu</h5>
     <div class="ingredients-box">
         <p class="mb-0" style="white-space: pre-line;">@Model.Recipe.description</p>
     </div>
@@ -207,19 +207,19 @@
                         <div class="comment-avatar">
                             @if (!string.IsNullOrEmpty(commentItem.User?.avatar_img))
                             {
-                                <img src="@commentItem.User.avatar_img" alt="@commentItem.User.username" 
-                                     class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                                <img src="@commentItem.User.avatar_img" alt="@(commentItem.User?.full_name ?? commentItem.User?.username)" 
+                                     class="rounded-circle comment-user-avatar" style="width: 48px; height: 48px; object-fit: cover;">
                             }
                             else
                             {
-                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" 
-                                     style="width: 32px; height: 32px; font-size: 14px;">
+                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center comment-user-avatar" 
+                                     style="width: 48px; height: 48px; font-size: 20px;">
                                     <i class="bi bi-person"></i>
                                 </div>
                             }
                         </div>
                         <div class="comment-body">
-                            <div class="comment-author">@commentItem.User?.username</div>
+                            <div class="comment-author">@(commentItem.User?.full_name ?? commentItem.User?.username ?? "Người dùng")</div>
                             <div class="comment-text">@commentItem.Comment.body</div>
                             <div class="comment-time">
                                 @{
