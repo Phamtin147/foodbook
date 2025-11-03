@@ -86,6 +86,19 @@ namespace foodbook.Controllers
                         .Where(x => x.recipe_id == recipe.recipe_id)
                         .Get();
 
+                    // Get comments count
+                    var commentsResult = await _supabaseService.Client
+                        .From<Comment>()
+                        .Select("comment_id")
+                        .Where(x => x.recipe_id == recipe.recipe_id)
+                        .Get();
+
+                    // Get shares count
+                    var sharesResult = await _supabaseService.Client
+                        .From<Share>()
+                        .Where(x => x.recipe_id == recipe.recipe_id)
+                        .Get();
+
                     searchResults.Add(new SearchResultViewModel
                     {
                         RecipeId = recipe.recipe_id ?? 0,
@@ -95,7 +108,9 @@ namespace foodbook.Controllers
                         UserId = recipe.user_id,
                         UserName = userInfo?.full_name ?? "User",
                         UserAvatarUrl = userInfo?.avatar_img ?? "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-                        LikesCount = likesResult.Models.Count
+                        LikesCount = likesResult.Models.Count,
+                        CommentsCount = commentsResult.Models.Count,
+                        SharesCount = sharesResult.Models.Count
                     });
                 }
 
@@ -365,6 +380,19 @@ namespace foodbook.Controllers
                         .Where(x => x.recipe_id == recipe.recipe_id)
                         .Get();
 
+                    // Get comments count
+                    var commentsResult = await _supabaseService.Client
+                        .From<Comment>()
+                        .Select("comment_id")
+                        .Where(x => x.recipe_id == recipe.recipe_id)
+                        .Get();
+
+                    // Get shares count
+                    var sharesResult = await _supabaseService.Client
+                        .From<Share>()
+                        .Where(x => x.recipe_id == recipe.recipe_id)
+                        .Get();
+
                     searchResults.Add(new SearchResultViewModel
                     {
                         RecipeId = recipe.recipe_id ?? 0,
@@ -374,7 +402,9 @@ namespace foodbook.Controllers
                         UserId = recipe.user_id,
                         UserName = userInfo?.full_name ?? "User",
                         UserAvatarUrl = userInfo?.avatar_img ?? "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-                        LikesCount = likesResult.Models.Count
+                        LikesCount = likesResult.Models.Count,
+                        CommentsCount = commentsResult.Models.Count,
+                        SharesCount = sharesResult.Models.Count
                     });
                 }
 

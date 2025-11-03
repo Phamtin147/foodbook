@@ -392,7 +392,73 @@ body {
 .user-inline-center { display: inline-flex; align-items: center; gap: 8px; }
 .feed-card-header .user-avatar { box-shadow: 0 0 0 2px #fff; }
 .user-avatar-ring { outline: 3px solid #e9ecef; border: 2px solid #fff; }
-.feed-card-header .user-name { line-height: 1.1; }
+.feed-card-header .user-name { 
+  line-height: 1.1; 
+  font-weight: 700 !important;
+}
+
+/* Level badge - to hơn */
+.level-badge {
+  font-size: 1rem !important;
+  padding: 8px 16px !important;
+  font-weight: 600 !important;
+}
+
+/* Recipe stats - to hơn */
+.recipe-stats {
+  font-size: 1.3rem !important;
+}
+.recipe-stats .stat-item {
+  font-size: 1.3rem !important;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.recipe-stats .stat-item i {
+  font-size: 1.5rem;
+}
+
+/* Recipe stats icons - màu riêng cho từng icon */
+/* Like icon - xanh dương */
+.recipe-stats .stat-item:has(.bi-hand-thumbs-up) i,
+.recipe-stats .stat-item .bi-hand-thumbs-up,
+.recipe-stats .stat-item .bi-hand-thumbs-up-fill {
+  color: #3b82f6;
+}
+/* Comment icon - vàng cam */
+.recipe-stats .stat-item:has(.bi-chat) i,
+.recipe-stats .stat-item .bi-chat {
+  color: #f59e0b;
+}
+/* Share icon - tím */
+.recipe-stats .stat-item:has(.bi-share) i,
+.recipe-stats .stat-item .bi-share {
+  color: #a855f7;
+}
+/* Clock icon - xanh lá */
+.recipe-stats .stat-item:has(.bi-clock) i,
+.recipe-stats .stat-item .bi-clock {
+  color: #1dd75b;
+}
+
+/* Cook time - in đậm */
+.cook-time-stat strong {
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: #111827;
+}
+
+/* Recipe author avatar và tên - to và đậm */
+.recipe-author-avatar {
+  width: 56px !important;
+  height: 56px !important;
+}
+.recipe-author-name {
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2;
+}
 .follow-btn { background-color: #1dd75b; border: none; font-weight: 600; }
 .follow-btn:hover { background-color: #16a34a; }
 .follow-btn-sm { padding: 6px 14px; font-size: .9rem; }
@@ -419,15 +485,17 @@ body {
     white-space: nowrap;
 }
 .tag-chip { 
-    background: #f3f4f6; 
-    color: #374151; 
-    font-weight: 600; 
-    font-size: .8rem; 
-    padding: 6px 12px; 
+    background: #86efac; 
+    color: #052e16; 
+    font-weight: 700; 
+    font-size: 1rem; 
+    padding: 10px 16px; 
     border-radius: 999px; 
     white-space: nowrap; 
     flex-shrink: 0; 
     display: inline-block;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    box-shadow: 0 1px 3px rgba(34, 197, 94, 0.2);
 }
 .tag-chip.tag-clickable {
     cursor: pointer;
@@ -437,23 +505,28 @@ body {
     background: #1dd75b;
     color: white;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(29, 215, 91, 0.3);
+    box-shadow: 0 2px 6px rgba(29, 215, 91, 0.4);
+    border-color: #16a34a;
 }
 .tag-show-more-btn { 
-    background: #e5e7eb; 
-    color: #6b7280; 
-    border: none; 
+    background: #86efac; 
+    color: #052e16; 
+    border: 1px solid rgba(34, 197, 94, 0.3); 
     border-radius: 999px; 
-    padding: 6px 12px; 
-    font-size: .8rem; 
-    font-weight: 600; 
+    padding: 10px 16px; 
+    font-size: 1rem; 
+    font-weight: 700; 
     cursor: pointer; 
     flex-shrink: 0;
     transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(34, 197, 94, 0.2);
 }
 .tag-show-more-btn:hover { 
-    background: #d1d5db; 
-    color: #374151; 
+    background: #1dd75b; 
+    color: white; 
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(29, 215, 91, 0.4);
+    border-color: #16a34a;
 }
 
 /* Tags Dropdown Popup */
@@ -535,9 +608,52 @@ body {
   gap: 62px;
   border-top: 1px solid rgba(0,0,0,0.15);
 }
-.feed-actions .action { display: inline-flex; align-items: center; gap: 8px; color: #6b7280; padding: 8px 12px; border-radius: 10px; }
-.feed-actions .action i { font-size: 1.05rem; }
-.feed-actions .action:hover { color: #111827; cursor: pointer; }
+.feed-actions .action { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 8px; 
+  color: #6b7280; 
+  padding: 8px 12px; 
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+.feed-actions .action i { 
+  font-size: 1.3rem;
+  transition: all 0.3s ease;
+}
+/* Like icon - màu xanh dương */
+.feed-actions .action:nth-child(1) i,
+.feed-actions .action:has(.bi-hand-thumbs-up) i {
+  color: #3b82f6;
+}
+.feed-actions .action:nth-child(1):hover i,
+.feed-actions .action:has(.bi-hand-thumbs-up):hover i {
+  color: #2563eb;
+  transform: scale(1.2);
+}
+/* Comment icon - màu vàng cam */
+.feed-actions .action:nth-child(2) i,
+.feed-actions .action:has(.bi-chat) i {
+  color: #f59e0b;
+}
+.feed-actions .action:nth-child(2):hover i,
+.feed-actions .action:has(.bi-chat):hover i {
+  color: #d97706;
+  transform: scale(1.2);
+}
+/* Share icon - màu tím */
+.feed-actions .action:nth-child(3) i,
+.feed-actions .action:has(.bi-share) i {
+  color: #a855f7;
+}
+.feed-actions .action:nth-child(3):hover i,
+.feed-actions .action:has(.bi-share):hover i {
+  color: #9333ea;
+  transform: scale(1.2);
+}
+.feed-actions .action:hover { 
+  cursor: pointer;
+}
 
 @media (min-width: 992px) {
   .row.newsfeed-grid { --bs-gutter-x: 2rem; }
@@ -1058,33 +1174,39 @@ body {
 }
 
 .tag-chip {
-  background-color: #f3f4f6;
-  color: #374151;
-  padding: 0.25rem 0.5rem;
+  background-color: #86efac;
+  color: #052e16;
+  padding: 0.5rem 1rem;
   border-radius: 0.375rem;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 700;
   white-space: nowrap;
   flex-shrink: 0;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  box-shadow: 0 1px 3px rgba(34, 197, 94, 0.2);
 }
 
 .tag-show-more-btn {
-  background-color: #f3f4f6;
-  color: #374151;
-  border: none;
-  padding: 0.25rem 0.5rem;
+  background-color: #86efac;
+  color: #052e16;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 0.5rem 1rem;
   border-radius: 0.375rem;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(34, 197, 94, 0.2);
 }
 
 .tag-show-more-btn:hover {
-  background-color: #e5e7eb;
-  color: #1f2937;
+  background-color: #1dd75b;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(29, 215, 91, 0.4);
+  border-color: #16a34a;
 }
 
 /* Autocomplete Dropdown */
@@ -1627,7 +1749,7 @@ body {
 
 /* Section Title */
 .section-title {
-    font-size: 16px;
+    font-size: 1.35rem !important;
     font-weight: 700;
     color: #1a1a1a;
     margin-bottom: 15px !important;
@@ -1636,6 +1758,7 @@ body {
 .recipe-section .section-title {
     background-color: transparent !important;
     margin-bottom: 15px !important;
+    font-size: 1.35rem !important;
 }
 
 /* Ingredients */
@@ -1646,6 +1769,8 @@ body {
     border: 1px solid #e0e0e0;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     margin-bottom: 20px !important;
+    font-size: 1.05rem !important;
+    line-height: 1.7;
 }
 
 .recipe-section * {
@@ -1706,8 +1831,8 @@ body {
 }
 
 .step-title {
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 1.25rem !important;
+    font-weight: 600;
     color: #333;
     margin: 0;
 }
@@ -1742,14 +1867,14 @@ body {
 
 .step-label {
     font-weight: 600;
-    font-size: 14px;
+    font-size: 1.1rem !important;
     color: #1a1a1a;
     margin-bottom: 8px;
     background-color: transparent !important;
 }
 
 .step-text {
-    font-size: 14px;
+    font-size: 1.05rem !important;
     color: #555;
     line-height: 1.6;
     margin: 0;
@@ -1863,8 +1988,8 @@ video.step-image {
     border: none;
     background: transparent;
     resize: none;
-    font-size: 14px;
-    padding: 8px;
+    font-size: 1.05rem !important;
+    padding: 12px;
     outline: none;
 }
 
@@ -1885,22 +2010,28 @@ video.step-image {
 }
 
 .comment-author {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
     color: #1a1a1a;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .comment-text {
-    font-size: 14px;
+    font-size: 1.05rem !important;
     color: #333;
-    line-height: 1.5;
-    margin-bottom: 4px;
+    line-height: 1.6;
+    margin-bottom: 6px;
 }
 
 .comment-time {
-    font-size: 12px;
+    font-size: 0.95rem !important;
     color: #888;
+}
+
+/* Comment avatar - to hơn */
+.comment-user-avatar {
+    width: 48px !important;
+    height: 48px !important;
 }
 
 /* Image Modal */
@@ -1982,5 +2113,78 @@ video.step-image {
         font-size: 16px;
         top: 12px;
         left: 12px;
+    }
+}
+
+/* Advanced Search Toggle Button */
+.advanced-search-toggle-wrapper {
+    margin-bottom: 1.5rem;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.advanced-search-toggle-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 500;
+    font-size: 1rem;
+    border: 2px solid #1dd75b !important;
+    color: #1dd75b !important;
+    background: white !important;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.advanced-search-toggle-btn:hover {
+    background: #1dd75b !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(29, 215, 91, 0.3);
+}
+
+.advanced-search-toggle-btn.active {
+    background: #1dd75b !important;
+    color: white !important;
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.advanced-search-toggle-btn.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Filters Wrapper - Hidden by default */
+.filters-wrapper {
+    margin-bottom: 2rem;
+    animation: slideDown 0.3s ease;
+}
+
+/* Force hide filters wrapper by default - HIGHEST PRIORITY */
+#filtersWrapper:not([style*="block"]) {
+    display: none !important;
+}
+
+/* Show filters wrapper when display: block is set */
+#filtersWrapper[style*="display: block"] {
+    display: block !important;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

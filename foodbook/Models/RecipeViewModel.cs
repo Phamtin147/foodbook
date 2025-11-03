@@ -9,6 +9,8 @@ namespace foodbook.Models
         public string? Level { get; set; }
         public int CookTime { get; set; }
         public int Likes { get; set; }
+        public int CommentsCount { get; set; }
+        public int SharesCount { get; set; }
         public DateTime? CreatedAt { get; set; }
 
         // Dữ liệu ảnh (có thể là base64 hoặc byte[])

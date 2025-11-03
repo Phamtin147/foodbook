@@ -1643,6 +1643,8 @@ namespace foodbook.Controllers
                         ThumbnailImg = r.thumbnail_img ?? "/images/no-thumbnail.png",
                         CookTime = r.cook_time ?? 0,
                         Likes = likes,
+                        CommentsCount = comments,
+                        SharesCount = shares,
                         CreatedAt = r.created_at,
                         Level = r.level?.ToString() ?? "dễ"
                     });

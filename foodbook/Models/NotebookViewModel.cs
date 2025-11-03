@@ -10,6 +10,8 @@ namespace foodbook.Models
         public string UserName { get; set; } = string.Empty;
         public string UserAvatarUrl { get; set; } = string.Empty;
         public int LikesCount { get; set; }
+        public int CommentsCount { get; set; }
+        public int SharesCount { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }
