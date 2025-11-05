@@ -5,6 +5,11 @@
 
 // Store current media index for each step
 let currentMediaIndexes = {};
+let galleryTimer = null;
+let galleryIndex = 0;
+let galleryThumbs = [];
+const SLIDE_INTERVAL_MS = 5000; // auto-rotate interval
+const SLIDE_DURATION_MS = 1000; // smoother slide transition duration
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -18,6 +23,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeShareButton();
     initializeCommentForm();
     initializeReportButton();
+    initializeGallery();
+    startGalleryAutoRotate();
 });
 
 // Initialize media indexes for each step
@@ -223,7 +230,7 @@ function initializeSaveButton() {
                         icon.classList.add('bi-bookmark');
                         this.classList.remove('btn-warning');
                         this.classList.add('btn-success');
-                        if (buttonText) buttonText.textContent = 'Lưu vào sổ tay';
+                        if (buttonText) buttonText.textContent = 'Lưu công thức';
                         showAlertModal('Đã xóa khỏi sổ tay', 'success');
                     }
                     this.dataset.isSaved = result.isSaved;
@@ -238,6 +245,121 @@ function initializeSaveButton() {
             showAlertModal('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
         }
     });
+}
+
+// Initialize gallery thumbnails
+function initializeGallery() {
+    const mainDisplay = document.getElementById('mainMediaDisplay');
+    if (!mainDisplay) return;
+    // ensure initial slide is created from background-image
+    setupInitialMainSlide();
+    galleryThumbs = Array.from(document.querySelectorAll('.gallery-thumb'));
+    galleryThumbs.forEach((thumb, idx) => {
+        thumb.addEventListener('click', function() {
+            const mediaType = this.dataset.mediaType;
+            const mediaUrl = this.dataset.mediaUrl;
+            const direction = idx > galleryIndex ? 1 : -1;
+            setMainMedia(mediaUrl, mediaType, direction);
+            galleryIndex = idx;
+            restartGalleryAutoRotate();
+        });
+    });
+}
+
+// Convert initial background-image into a slide layer
+function setupInitialMainSlide() {
+    const container = document.getElementById('mainMediaDisplay');
+    if (!container) return;
+    const bg = container.style.backgroundImage;
+    const hasSlide = container.querySelector('.media-slide');
+    if (hasSlide) return;
+    const slide = document.createElement('div');
+    slide.className = 'media-slide active';
+    applySlideBaseStyles(slide);
+    if (bg && bg !== 'none') {
+        slide.style.backgroundImage = bg;
+        slide.style.backgroundPosition = 'center';
+        slide.style.backgroundRepeat = 'no-repeat';
+        slide.style.backgroundSize = 'cover';
+        container.style.backgroundImage = 'none';
+    }
+    container.appendChild(slide);
+}
+
+// Swap main media display
+function setMainMedia(url, type, direction = 1) {
+    const mainDisplay = document.getElementById('mainMediaDisplay');
+    if (!mainDisplay) return;
+    const current = mainDisplay.querySelector('.media-slide.active');
+    const next = document.createElement('div');
+    next.className = 'media-slide';
+    applySlideBaseStyles(next);
+    // prepare next content
+    if (type === 'video') {
+        mainDisplay.style.backgroundImage = 'none';
+        const video = document.createElement('video');
+        video.controls = true;
+        video.preload = 'metadata';
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.innerHTML = `<source src="${url}" type="video/mp4">`;
+        next.appendChild(video);
+    } else {
+        next.style.backgroundImage = `url('${url}')`;
+        next.style.backgroundPosition = 'center';
+        next.style.backgroundRepeat = 'no-repeat';
+        next.style.backgroundSize = 'cover';
+    }
+
+    // slide in from right/left
+    next.style.transform = `translateX(${direction > 0 ? '100%' : '-100%'})`;
+    mainDisplay.appendChild(next);
+    // force reflow before starting transition
+    void next.offsetWidth;
+    if (current) {
+        current.style.transition = `transform ${SLIDE_DURATION_MS}ms ease`;
+        current.style.transform = `translateX(${direction > 0 ? '-100%' : '100%'})`;
+        current.classList.remove('active');
+    }
+    next.style.transition = `transform ${SLIDE_DURATION_MS}ms ease`;
+    next.style.transform = 'translateX(0)';
+    next.classList.add('active');
+
+    const cleanup = () => {
+        if (current && current.parentElement === mainDisplay) {
+            mainDisplay.removeChild(current);
+        }
+        next.removeEventListener('transitionend', cleanup);
+    };
+    next.addEventListener('transitionend', cleanup);
+}
+
+// Auto-rotate main gallery every 5 seconds
+function startGalleryAutoRotate() {
+    restartGalleryAutoRotate();
+}
+
+function restartGalleryAutoRotate() {
+    if (galleryTimer) {
+        clearInterval(galleryTimer);
+        galleryTimer = null;
+    }
+    if (!galleryThumbs || galleryThumbs.length <= 1) return;
+    galleryTimer = setInterval(() => {
+        galleryIndex = (galleryIndex + 1) % galleryThumbs.length;
+        const next = galleryThumbs[galleryIndex];
+        if (!next) return;
+        const mediaType = next.dataset.mediaType;
+        const mediaUrl = next.dataset.mediaUrl;
+        setMainMedia(mediaUrl, mediaType, 1);
+    }, SLIDE_INTERVAL_MS);
+}
+
+function applySlideBaseStyles(el) {
+    el.style.position = 'absolute';
+    el.style.inset = '0';
+    el.style.width = '100%';
+    el.style.height = '100%';
 }
 
 // Initialize like button

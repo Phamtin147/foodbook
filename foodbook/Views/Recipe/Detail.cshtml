@@ -61,7 +61,7 @@
         <button class="btn @(Model.IsSaved ? "btn-warning" : "btn-success") btn-sm save-btn" id="btnSaveRecipe" 
                 data-recipe-id="@Model.Recipe.recipe_id" data-is-saved="@Model.IsSaved">
             <i class="bi @(Model.IsSaved ? "bi-bookmark-fill" : "bi-bookmark")"></i>
-            <span class="save-text">@(Model.IsSaved ? "Đã lưu" : "Lưu vào sổ tay")</span>
+            <span class="save-text">@(Model.IsSaved ? "Đã lưu" : "Lưu công thức")</span>
         </button>
         
         @if (!Model.IsOwnRecipe)
@@ -94,11 +94,51 @@
     </span>
 </div>
 
-<!-- Thumbnail Image -->
+<!-- Thumbnail with Step Media Gallery -->
 @if (!string.IsNullOrEmpty(Model.Recipe.thumbnail_img))
 {
-    <div class="recipe-thumbnail mb-4">
-        <img src="@Model.Recipe.thumbnail_img" alt="@Model.Recipe.name" class="img-fluid rounded-3">
+    <div class="mb-4">
+        <div class="row g-3 align-items-start">
+            <div class="col-12 col-md-10">
+                <div class="recipe-thumbnail rounded-3" id="mainMediaDisplay" style="transition: opacity .25s ease; opacity: 1; position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; background: url('@Model.Recipe.thumbnail_img') center / cover no-repeat;">
+                </div>
+            </div>
+            <div class="col-12 col-md-2">
+                <div class="d-flex flex-row flex-md-column gap-2 justify-content-start">
+                    <a href="javascript:void(0)" class="gallery-thumb" data-media-type="image" data-media-url="@Model.Recipe.thumbnail_img" aria-label="Thumbnail" style="display:block; width:100%; aspect-ratio: 1/1; overflow:hidden;">
+                        <img src="@Model.Recipe.thumbnail_img" alt="Thumb" class="img-fluid rounded border" style="width:100%; height:100%; object-fit: cover;">
+                    </a>
+                    @{ var thumbCount = 0; var maxThumbs = 6; }
+                    @foreach (var step in Model.Steps)
+                    {
+                        if (thumbCount >= maxThumbs) { break; }
+                        if (Model.StepMedia.ContainsKey(step.step) && Model.StepMedia[step.step].Count > 0)
+                        {
+                            foreach (var media in Model.StepMedia[step.step])
+                            {
+                                if (thumbCount >= maxThumbs) { break; }
+                                if (!string.IsNullOrEmpty(media.media_img))
+                                {
+                                    <a href="javascript:void(0)" class="gallery-thumb" data-media-type="image" data-media-url="@media.media_img" aria-label="Ảnh bước @step.step" style="display:block; width:100%; aspect-ratio: 1/1; overflow:hidden;">
+                                        <img src="@media.media_img" alt="Ảnh bước @step.step" class="img-fluid rounded border" style="width:100%; height:100%; object-fit: cover;">
+                                    </a>
+                                    thumbCount++;
+                                }
+                                else if (!string.IsNullOrEmpty(media.media_video))
+                                {
+                                    <a href="javascript:void(0)" class="gallery-thumb" data-media-type="video" data-media-url="@media.media_video" aria-label="Video bước @step.step">
+                                        <video class="img-fluid rounded border" preload="metadata" muted>
+                                            <source src="@media.media_video" type="video/mp4">
+                                        </video>
+                                    </a>
+                                    thumbCount++;
+                                }
+                            }
+                        }
+                    }
+                </div>
+            </div>
+        </div>
     </div>
 }
 
