@@ -408,41 +408,8 @@ function initializeLikeButton() {
 
 // Initialize follow button
 function initializeFollowButton() {
-    const btnFollow = document.querySelector('.follow-btn');
-    if (!btnFollow) return;
-    
-    btnFollow.addEventListener('click', async function() {
-        const userId = this.dataset.userId;
-        const isFollowing = this.dataset.isFollowing === 'true';
-        
-        try {
-            const response = await fetch('/Home/ToggleFollow', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `userId=${userId}&isFollowing=${isFollowing}&__RequestVerificationToken=${getCSRFToken()}`
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                if (result.success) {
-                    if (result.isFollowing) {
-                        this.classList.remove('btn-outline-success');
-                        this.classList.add('btn-outline-secondary');
-                        this.textContent = 'Đã theo dõi';
-                    } else {
-                        this.classList.remove('btn-outline-secondary');
-                        this.classList.add('btn-outline-success');
-                        this.textContent = 'Theo dõi';
-                    }
-                    this.dataset.isFollowing = result.isFollowing;
-                }
-            }
-        } catch (error) {
-            console.error('Error toggling follow:', error);
-        }
-    });
+    // Follow button functionality is now handled by universal follow-handler.js
+    // This function is kept for backward compatibility but does nothing
 }
 
 // Initialize share button

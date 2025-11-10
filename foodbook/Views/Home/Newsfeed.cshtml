@@ -33,7 +33,7 @@
                                 <button class="btn @(recipe.IsFollowing ? "btn-outline-secondary" : "btn-success") rounded-pill px-3 mt-2 follow-btn follow-btn-sm" 
                                         data-user-id="@recipe.UserId" 
                                         data-is-following="@recipe.IsFollowing.ToString().ToLower()">
-                                    <i class="bi bi-person-plus"></i> @(recipe.IsFollowing ? "Following" : "Follow")
+                                    <i class="bi bi-person-plus"></i> @(recipe.IsFollowing ? "Đã follow" : "Follow")
                                 </button>
                             }
                             else
@@ -230,7 +230,7 @@ function createRecipeCard(recipe) {
         `<button class="btn ${recipe.isFollowing ? 'btn-outline-secondary' : 'btn-success'} rounded-pill px-3 mt-2 follow-btn follow-btn-sm"
                  data-user-id="${recipe.userId}"
                  data-is-following="${recipe.isFollowing}">
-            <i class="bi bi-person-plus"></i> ${recipe.isFollowing ? 'Following' : 'Follow'}
+            <i class="bi bi-person-plus"></i> ${recipe.isFollowing ? 'Đã follow' : 'Follow'}
          </button>` : '<div style="height: 38px; margin-top: 8px;"></div>';
 
     return `
@@ -372,81 +372,7 @@ function loadMoreRecipes() {
         });
 }
 
-// Follow button functionality
-document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('follow-btn')) {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        const button = event.target;
-        const userId = button.getAttribute('data-user-id');
-        const isFollowing = button.getAttribute('data-is-following') === 'true';
-        
-        if (!userId) return;
-        
-        // Toggle follow status
-        const newFollowStatus = !isFollowing;
-        
-        // Update button appearance immediately
-        if (newFollowStatus) {
-            button.classList.remove('btn-success');
-            button.classList.add('btn-outline-secondary');
-            button.innerHTML = '<i class="bi bi-person-plus"></i> Following';
-            button.setAttribute('data-is-following', 'true');
-        } else {
-            button.classList.remove('btn-outline-secondary');
-            button.classList.add('btn-success');
-            button.innerHTML = '<i class="bi bi-person-plus"></i> Follow';
-            button.setAttribute('data-is-following', 'false');
-        }
-        
-        // Send request to server
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-        const formData = new FormData();
-        formData.append('userId', userId);
-        formData.append('isFollowing', newFollowStatus);
-        formData.append('__RequestVerificationToken', token);
-        
-        fetch('/Home/ToggleFollow', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (!data.success) {
-                // Revert button state if request failed
-                if (isFollowing) {
-                    button.classList.remove('btn-success');
-                    button.classList.add('btn-outline-secondary');
-                    button.innerHTML = '<i class="bi bi-person-plus"></i> Following';
-                    button.setAttribute('data-is-following', 'true');
-                } else {
-                    button.classList.remove('btn-outline-secondary');
-                    button.classList.add('btn-success');
-                    button.innerHTML = '<i class="bi bi-person-plus"></i> Follow';
-                    button.setAttribute('data-is-following', 'false');
-                }
-                alert('Có lỗi xảy ra: ' + (data.message || 'Không thể thực hiện thao tác'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            // Revert button state if request failed
-            if (isFollowing) {
-                button.classList.remove('btn-success');
-                button.classList.add('btn-outline-secondary');
-                button.innerHTML = '<i class="bi bi-person-plus"></i> Following';
-                button.setAttribute('data-is-following', 'true');
-            } else {
-                button.classList.remove('btn-outline-secondary');
-                button.classList.add('btn-success');
-                button.innerHTML = '<i class="bi bi-person-plus"></i> Follow';
-                button.setAttribute('data-is-following', 'false');
-            }
-            alert('Có lỗi xảy ra khi thực hiện thao tác');
-        });
-    }
-});
+// Follow button functionality is now handled by universal follow-handler.js
 
 // Scroll event listener
 window.addEventListener('scroll', function() {
