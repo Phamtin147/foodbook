@@ -128,11 +128,6 @@
                                     <i class="bi bi-plus-circle"></i> Thêm công thức mới
                                 </a>
                             </li>
-                            <li class="nav-item d-lg-none">
-                                <a class="nav-link @(currentController == "Account" && currentAction == "Settings" ? "text-green fw-bold" : "text-dark")" asp-controller="Account" asp-action="Settings">
-                                    <i class="bi bi-gear"></i> Cài đặt
-                                </a>
-                            </li>
                         </ul>
                         
                         <!-- Desktop User Profile - Only visible on desktop -->
@@ -268,12 +263,6 @@
                         <a class="sidebar-menu-link @(currentController == "Recipe" && currentAction == "Add" ? "active" : "")" asp-controller="Recipe" asp-action="Add">
                             <i class="sidebar-menu-icon bi bi-plus-circle"></i>
                             <span>Thêm công thức mới</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a class="sidebar-menu-link @(currentController == "Account" && currentAction == "Settings" ? "active" : "")" asp-controller="Account" asp-action="Settings">
-                            <i class="sidebar-menu-icon bi bi-gear"></i>
-                            <span>Cài đặt</span>
                         </a>
                     </li>
                 </ul>
