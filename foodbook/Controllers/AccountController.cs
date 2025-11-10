@@ -331,12 +331,6 @@ namespace foodbook.Controllers
             return RedirectToAction("Index", "Profile");
         }
 
-        [HttpGet]
-        [LoginRequired]
-        public IActionResult Settings()
-        {
-            return View();
-        }
 
         [HttpGet]
         public async Task<IActionResult> VerifyEmail(string email)
