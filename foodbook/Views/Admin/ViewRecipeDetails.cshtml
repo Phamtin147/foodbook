@@ -44,8 +44,14 @@
                         <div class="col-md-6">
                             <strong>Thời gian nấu:</strong> @Model.Recipe.cook_time phút
                         </div>
+                        @{
+                            var levelRaw = Convert.ToString(Model.Recipe.level) ?? string.Empty;
+                            var levelDisplay = string.IsNullOrWhiteSpace(levelRaw) ? "dễ" : levelRaw;
+                            var levelKey = levelDisplay.Trim().ToLowerInvariant();
+                        }
                         <div class="col-md-6">
-                            <strong>Độ khó:</strong> @Model.Recipe.level
+                            <strong>Độ khó:</strong>
+                            <span class="difficulty-pill" data-level="@levelKey">@levelDisplay</span>
                         </div>
                     </div>
                     

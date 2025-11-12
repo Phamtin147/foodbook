@@ -397,11 +397,75 @@ body {
   font-weight: 700 !important;
 }
 
-/* Level badge - to hơn */
+/* Difficulty badges */
+.difficulty-pill,
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600 !important;
+  font-size: 0.9rem;
+  line-height: 1;
+  text-transform: capitalize;
+  background-color: #e5e7eb;
+  color: #111827;
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+}
+
 .level-badge {
   font-size: 1rem !important;
-  padding: 8px 16px !important;
-  font-weight: 600 !important;
+  padding: 0.5rem 1.1rem !important;
+}
+
+.difficulty-link {
+  display: inline-flex;
+  text-decoration: none;
+}
+
+.difficulty-link:hover .difficulty-pill {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.18);
+}
+
+.difficulty-pill[data-level="dễ"],
+.level-badge[data-level="dễ"],
+.difficulty-pill[data-level="de"],
+.level-badge[data-level="de"],
+.difficulty-pill[data-level="easy"],
+.level-badge[data-level="easy"] {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+.difficulty-pill[data-level="bình thường"],
+.level-badge[data-level="bình thường"],
+.difficulty-pill[data-level="binh thường"],
+.level-badge[data-level="binh thường"],
+.difficulty-pill[data-level="bình thuong"],
+.level-badge[data-level="bình thuong"],
+.difficulty-pill[data-level="binh thuong"],
+.level-badge[data-level="binh thuong"],
+.difficulty-pill[data-level="normal"],
+.level-badge[data-level="normal"],
+.difficulty-pill[data-level="medium"],
+.level-badge[data-level="medium"] {
+  background-color: #facc15;
+  color: #422006;
+}
+
+.difficulty-pill[data-level="khó"],
+.level-badge[data-level="khó"],
+.difficulty-pill[data-level="kho"],
+.level-badge[data-level="kho"],
+.difficulty-pill[data-level="hard"],
+.level-badge[data-level="hard"] {
+  background-color: #ef4444;
+  color: #ffffff;
 }
 
 /* Recipe stats - to hơn */
@@ -507,6 +571,52 @@ body {
     transform: translateY(-1px);
     box-shadow: 0 2px 6px rgba(29, 215, 91, 0.4);
     border-color: #16a34a;
+}
+
+/* Tag-chip với độ khó - màu theo nội dung text */
+.tag-chip.tag-difficulty-easy,
+.tag-chip.tag-difficulty-de {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    box-shadow: 0 1px 3px rgba(59, 130, 246, 0.2) !important;
+}
+
+.tag-chip.tag-difficulty-easy:hover,
+.tag-chip.tag-difficulty-de:hover {
+    background-color: #2563eb !important;
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4) !important;
+}
+
+.tag-chip.tag-difficulty-normal,
+.tag-chip.tag-difficulty-binh-thuong {
+    background-color: #facc15 !important;
+    color: #422006 !important;
+    border: 1px solid rgba(250, 204, 21, 0.3) !important;
+    box-shadow: 0 1px 3px rgba(250, 204, 21, 0.2) !important;
+}
+
+.tag-chip.tag-difficulty-normal:hover,
+.tag-chip.tag-difficulty-binh-thuong:hover {
+    background-color: #eab308 !important;
+    border-color: #ca8a04 !important;
+    box-shadow: 0 2px 6px rgba(250, 204, 21, 0.4) !important;
+}
+
+.tag-chip.tag-difficulty-hard,
+.tag-chip.tag-difficulty-kho {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.2) !important;
+}
+
+.tag-chip.tag-difficulty-hard:hover,
+.tag-chip.tag-difficulty-kho:hover {
+    background-color: #dc2626 !important;
+    border-color: #b91c1c !important;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4) !important;
 }
 .tag-show-more-btn { 
     background: #86efac; 
@@ -1698,10 +1808,10 @@ body {
 }
 
 .level-badge {
-    font-size: 12px;
-    padding: 3px 10px;
-    border-radius: 10px;
-    font-weight: 500;
+    font-size: 1rem !important;
+    padding: 0.5rem 1.1rem !important;
+    border-radius: 999px;
+    font-weight: 600 !important;
 }
 
 /* Buttons */

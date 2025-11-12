@@ -77,7 +77,7 @@
                                 }
                                 else
                                 {
-                                    <span class="tag-chip tag-clickable" onclick="event.stopPropagation(); event.preventDefault(); searchByDifficulty('@recipe.Level')">@recipe.Level</span>
+                                    <span class="tag-chip tag-clickable" data-level="@recipe.Level.ToLower()" onclick="event.stopPropagation(); event.preventDefault(); searchByDifficulty('@recipe.Level')">@recipe.Level</span>
                                 }
                             </div>
                             @if (recipe.Tags != null && recipe.Tags.Count > 3)
@@ -222,9 +222,17 @@ window.addEventListener('scroll', function() {
 }, { passive: true });
 
 function createRecipeCard(recipe) {
-    const tagsHtml = recipe.tags.slice(0, 3).map(tag => `<span class="tag-chip tag-clickable" onclick="event.stopPropagation(); event.preventDefault(); searchByTagSmart('${tag}')">${tag}</span>`).join('');
-    const showMoreBtn = recipe.tags.length > 3 ?
-        `<button class="tag-show-more-btn" onclick="event.stopPropagation(); event.preventDefault(); showTagsPopup(${recipe.recipeId}, '${recipe.tags.join('|')}')">+${recipe.tags.length - 3}</button>` : '';
+    let tagsHtml = '';
+    let showMoreBtn = '';
+    
+    if (recipe.tags && recipe.tags.length > 0) {
+        tagsHtml = recipe.tags.slice(0, 3).map(tag => `<span class="tag-chip tag-clickable" onclick="event.stopPropagation(); event.preventDefault(); searchByTagSmart('${tag}')">${tag}</span>`).join('');
+        showMoreBtn = recipe.tags.length > 3 ?
+            `<button class="tag-show-more-btn" onclick="event.stopPropagation(); event.preventDefault(); showTagsPopup(${recipe.recipeId}, '${recipe.tags.join('|')}')">+${recipe.tags.length - 3}</button>` : '';
+    } else if (recipe.level) {
+        const levelLower = recipe.level.toLowerCase();
+        tagsHtml = `<span class="tag-chip tag-clickable" data-level="${levelLower}" onclick="event.stopPropagation(); event.preventDefault(); searchByDifficulty('${recipe.level}')">${recipe.level}</span>`;
+    }
 
     const followButtonHtml = (recipe.userId !== 0 && !recipe.isOwnPost) ?
         `<button class="btn ${recipe.isFollowing ? 'btn-outline-secondary' : 'btn-success'} rounded-pill px-3 mt-2 follow-btn follow-btn-sm"
@@ -287,6 +295,49 @@ let currentPage = 1;
 let isLoading = false;
 let hasMore = true;
 
+// Function để kiểm tra text và thêm class màu cho tag độ khó
+function applyDifficultyColorToTags() {
+    const tags = document.querySelectorAll('.tag-chip');
+    tags.forEach(tag => {
+        const text = tag.textContent.trim().toLowerCase();
+        
+        // Xóa các class cũ
+        tag.classList.remove('tag-difficulty-easy', 'tag-difficulty-de', 
+                            'tag-difficulty-normal', 'tag-difficulty-binh-thuong',
+                            'tag-difficulty-hard', 'tag-difficulty-kho');
+        
+        // Kiểm tra chính xác - chỉ match từ đầy đủ, không phải phần của từ khác
+        // Ưu tiên kiểm tra chính xác text trước
+        const exactMatch = text === 'dễ' || text === 'de' || text === 'easy' ||
+                          text === 'bình thường' || text === 'binh thường' || text === 'bình thuong' || 
+                          text === 'binh thuong' || text === 'normal' || text === 'medium' ||
+                          text === 'khó' || text === 'kho' || text === 'hard';
+        
+        if (exactMatch) {
+            // Nếu text chính xác là một trong các giá trị độ khó
+            if (text === 'dễ' || text === 'de' || text === 'easy') {
+                tag.classList.add('tag-difficulty-easy');
+            } else if (text === 'bình thường' || text === 'binh thường' || text === 'bình thuong' || 
+                      text === 'binh thuong' || text === 'normal' || text === 'medium') {
+                tag.classList.add('tag-difficulty-normal');
+            } else if (text === 'khó' || text === 'kho' || text === 'hard') {
+                tag.classList.add('tag-difficulty-hard');
+            }
+        } else {
+            // Nếu không match chính xác, kiểm tra có chứa từ đầy đủ (dùng word boundary)
+            // Chỉ kiểm tra "khó" (có dấu), không kiểm tra "kho" để tránh match "khoai"
+            if (/\b(dễ|de|easy)\b/i.test(text)) {
+                tag.classList.add('tag-difficulty-easy');
+            } else if (/\b(bình thường|binh thường|bình thuong|binh thuong|normal|medium)\b/i.test(text)) {
+                tag.classList.add('tag-difficulty-normal');
+            } else if (/\b(khó|hard)\b/i.test(text)) {
+                // Chỉ match "khó" (có dấu), không match "kho" để tránh "khoai lang"
+                tag.classList.add('tag-difficulty-hard');
+            }
+        }
+    });
+}
+
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
     // Add event listener for load more button
@@ -294,6 +345,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (loadMoreBtn) {
         loadMoreBtn.addEventListener('click', loadMoreRecipes);
     }
+    
+    // Áp dụng màu cho tags khi page load
+    applyDifficultyColorToTags();
 });
 
 function loadMoreRecipes() {
@@ -336,6 +390,9 @@ function loadMoreRecipes() {
                     const recipeHtml = createRecipeCard(recipe);
                     grid.insertAdjacentHTML('beforeend', recipeHtml);
                 });
+                
+                // Áp dụng màu cho tags mới được load
+                applyDifficultyColorToTags();
                 
                 hasMore = data.hasMore;
                 console.log(`Loaded ${data.recipes.length} more recipes. HasMore: ${hasMore}`);

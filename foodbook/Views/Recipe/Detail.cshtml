@@ -2,6 +2,9 @@
 @{
     ViewData["Title"] = Model.Recipe.name;
     Layout = "~/Views/Shared/_Layout.cshtml";
+    string recipeLevelRaw = Convert.ToString(Model.Recipe.level) ?? string.Empty;
+    string recipeLevelDisplay = string.IsNullOrWhiteSpace(recipeLevelRaw) ? "dễ" : recipeLevelRaw;
+    string recipeLevelKey = recipeLevelDisplay.Trim().ToLowerInvariant();
 }
 
 <link rel="stylesheet" href="~/css/recipe-detail.css" asp-append-version="true" />
@@ -18,7 +21,7 @@
 <!-- Recipe Title with Level Badge -->
 <div class="d-flex align-items-center gap-2 mb-2">
     <h1 class="recipe-title mb-0">@Model.Recipe.name</h1>
-    <span class="badge bg-success level-badge">@Model.Recipe.level</span>
+    <span class="level-badge" data-level="@recipeLevelKey">@recipeLevelDisplay</span>
 </div>
 
 <!-- Author Info with Follow Button -->

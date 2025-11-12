@@ -304,6 +304,9 @@
                     </button>
                 </div>` : '';
             
+            const levelRaw = recipe.level || 'dễ';
+            const levelKey = levelRaw.toString().trim().toLowerCase();
+
             return `
                 <div class="col-md-6 col-lg-4 col-xl-3 mb-4" data-recipe-id="${recipe.recipeId}">
                     <div class="recipe-card">
@@ -320,7 +323,7 @@
                                 <span style="color: #16a34a;">Bởi bạn</span>
                             </div>
                             <div class="recipe-difficulty">
-                                Độ khó: <strong>${recipe.level || 'dễ'}</strong>
+                                Độ khó: <span class="difficulty-pill" data-level="${levelKey}">${levelRaw}</span>
                             </div>
                             <div class="recipe-info">
                                 <div class="recipe-likes">
@@ -459,6 +462,9 @@
 
         // Create reacted recipe card
         function createReactedRecipeCard(recipe) {
+            const levelRaw = recipe.level || 'dễ';
+            const levelKey = levelRaw.toString().trim().toLowerCase();
+
             return `
                 <div class="col-md-6 col-lg-4 col-xl-3 mb-4" data-recipe-id="${recipe.recipeId}">
                     <div class="recipe-card">
@@ -471,11 +477,14 @@
                         </div>
                         <div class="recipe-card-body">
                             <h5 class="recipe-title">${recipe.recipeName || 'Không có tên'}</h5>
-                            <div class="recipe-author">
-                                <a href="/Profile/Info?id=${recipe.userId || ''}">${recipe.userName || 'Người dùng'}</a>
+                            <div class="recipe-author d-flex align-items-center gap-2">
+                                <a href="/Profile/Info?id=${recipe.userId || ''}" class="text-decoration-none d-inline-flex align-items-center">
+                                    <img src="${recipe.userAvatarUrl || '/images/default-avatar.jpg'}" alt="${recipe.userName || 'Người dùng'}" class="rounded-circle me-2" width="24" height="24" style="object-fit: cover;">
+                                    <span>${recipe.userName || 'Người dùng'}</span>
+                                </a>
                             </div>
                             <div class="recipe-difficulty">
-                                Độ khó: <strong>${recipe.level || 'dễ'}</strong>
+                                Độ khó: <span class="difficulty-pill" data-level="${levelKey}">${levelRaw}</span>
                             </div>
                             <div class="recipe-info">
                                 <div class="recipe-likes">
