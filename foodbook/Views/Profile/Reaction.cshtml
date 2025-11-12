@@ -107,9 +107,14 @@
                                             </div>
                                         }
                                         
+                                        @{
+                                            var levelRaw = recipe.Level ?? string.Empty;
+                                            var levelDisplay = string.IsNullOrWhiteSpace(levelRaw) ? "dễ" : levelRaw;
+                                            var levelKey = levelDisplay.Trim().ToLowerInvariant();
+                                        }
                                         <!-- Level -->
                                         <div class="mt-2">
-                                            <span class="badge bg-primary">@recipe.Level</span>
+                                            <span class="difficulty-pill" data-level="@levelKey">@levelDisplay</span>
                                         </div>
                                     </div>
                                 </a>
@@ -225,6 +230,10 @@
         const dateStr = createdAt.toLocaleDateString('vi-VN');
         const timeStr = createdAt.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
 
+        const levelRaw = recipe.level || 'dễ';
+        const levelKey = escapeHtml(levelRaw.toString().trim().toLowerCase());
+        const levelLabel = escapeHtml(levelRaw);
+
         return `
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden feed-card">
@@ -261,7 +270,7 @@
                             
                             <!-- Level -->
                             <div class="mt-2">
-                                <span class="badge bg-primary">${escapeHtml(recipe.level || 'dễ')}</span>
+                                <span class="difficulty-pill" data-level="${levelKey}">${levelLabel}</span>
                             </div>
                         </div>
                     </a>

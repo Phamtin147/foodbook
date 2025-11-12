@@ -41,11 +41,26 @@
                         </div>
                         <div class="recipe-card-body">
                             <h5 class="recipe-title">@recipe.RecipeName</h5>
-                            <div class="recipe-author">
-                                <a href="@Url.Action("Info", "Profile", new { id = recipe.UserId })">@recipe.UserName</a>
+                            <div class="recipe-author d-flex align-items-center gap-2">
+                                <a href="@Url.Action("Info", "Profile", new { id = recipe.UserId })" class="text-decoration-none d-inline-flex align-items-center">
+                                    <img src="@recipe.UserAvatarUrl"
+                                         alt="@recipe.UserName"
+                                         class="rounded-circle me-2"
+                                         width="24" height="24"
+                                         style="object-fit: cover;">
+                                    <span>@recipe.UserName</span>
+                                </a>
                             </div>
+                            @{
+                                var levelRaw = recipe.Level ?? string.Empty;
+                                var levelDisplay = string.IsNullOrWhiteSpace(levelRaw) ? "dễ" : levelRaw;
+                                var levelKey = levelDisplay.Trim().ToLowerInvariant();
+                            }
                             <div class="recipe-difficulty">
-                                Độ khó: <a href="@Url.Action("Search", "Search")?difficulty=@Uri.EscapeDataString(recipe.Level)" class="difficulty-link"><strong>@recipe.Level</strong></a>
+                                Độ khó:
+                                <a href="@Url.Action("Search", "Search")?difficulty=@Uri.EscapeDataString(levelDisplay)" class="difficulty-link">
+                                    <span class="difficulty-pill" data-level="@levelKey">@levelDisplay</span>
+                                </a>
                             </div>
                             <div class="recipe-info">
                                 <div class="recipe-likes">

@@ -149,8 +149,13 @@
                                 <div class="recipe-author">
                                     <a href="@Url.Action("Info", "Profile", new { id = recipe.UserId })">@recipe.UserName</a>
                                 </div>
+                                @{
+                                    var levelRaw = recipe.Level ?? string.Empty;
+                                    var levelDisplay = string.IsNullOrWhiteSpace(levelRaw) ? "dễ" : levelRaw;
+                                    var levelKey = levelDisplay.Trim().ToLowerInvariant();
+                                }
                                 <div class="recipe-difficulty">
-                                    Độ khó: <strong>@recipe.Level</strong>
+                                    Độ khó: <span class="difficulty-pill" data-level="@levelKey">@levelDisplay</span>
                                 </div>
                                 <div class="recipe-info">
                                     <div class="recipe-likes">
@@ -1145,6 +1150,9 @@ function updateSearchResults(results) {
 
     let html = '';
     results.forEach(recipe => {
+        const difficultyRaw = recipe.level || 'dễ';
+        const difficultyKey = difficultyRaw.toString().trim().toLowerCase();
+
         html += `
             <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                 <div class="recipe-card">
@@ -1157,7 +1165,7 @@ function updateSearchResults(results) {
                             <a href="/Profile/Info?id=${recipe.userId}">${recipe.userName}</a>
                         </div>
                         <div class="recipe-difficulty">
-                            Độ khó: <strong>${recipe.level}</strong>
+                            Độ khó: <span class="difficulty-pill" data-level="${difficultyKey}">${difficultyRaw}</span>
                         </div>
                         <div class="recipe-info">
                             <div class="recipe-likes">
