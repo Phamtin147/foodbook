@@ -150,12 +150,16 @@ function adjustContainerToMedia(container, media) {
     const wrapperWidth = wrapper.offsetWidth;
     const calculatedHeight = wrapperWidth / aspectRatio;
     
+    // Đảm bảo container luôn fill wrapper để không bị trống
     container.style.width = wrapperWidth + 'px';
-    container.style.height = calculatedHeight + 'px';
+    // Đảm bảo height tối thiểu để không bị trống khi ảnh nhỏ
+    container.style.height = Math.max(calculatedHeight, 200) + 'px';
     
+    // Đảm bảo media luôn fill container
     media.style.width = '100%';
     media.style.height = '100%';
-    media.style.objectFit = 'contain';
+    // Dùng cover để fill container, không bị trống
+    media.style.objectFit = 'cover';
     
     console.log(`Adjusted container: ${naturalWidth}x${naturalHeight} (${aspectRatio.toFixed(2)}), wrapper: ${wrapperWidth}px, calculated height: ${calculatedHeight}px`);
 }
