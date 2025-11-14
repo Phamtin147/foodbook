@@ -158,12 +158,11 @@ function showTagsPopup(recipeId, tagsString) {
         const isMobile = window.innerWidth <= 768;
         
         if (isMobile) {
-            // Trên mobile, hiển thị dropdown ở giữa màn hình
+            // Trên mobile, CSS đã xử lý positioning trong media query
+            // Chỉ cần đảm bảo popup hiển thị
             dropdown.style.position = 'fixed';
-            dropdown.style.top = '50%';
-            dropdown.style.left = '50%';
-            dropdown.style.transform = 'translate(-50%, -50%)';
             dropdown.style.zIndex = '9999';
+            dropdown.style.display = 'block';
         } else {
             // Trên desktop, tính toán vị trí dropdown
             let topPosition = rect.bottom + 5;
